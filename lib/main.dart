@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_joints/screens/joint_assessment_screen.dart';
 import 'screens/login_selection_screen.dart';
 
 void main() {
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const LoginSelectionScreen(),
+      home: const JointAssessmentScreen(),
     );
   }
 }
