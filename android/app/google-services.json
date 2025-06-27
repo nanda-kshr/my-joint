@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "429143913841",
+    "project_id": "my-joints-e12bd",
+    "storage_bucket": "my-joints-e12bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:429143913841:android:907943221f01f8999072d0",
+        "android_client_info": {
+          "package_name": "com.myjoints.savee"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQBlXWZY-j6INmd36GbJaxJXpvkaJz-ss"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
