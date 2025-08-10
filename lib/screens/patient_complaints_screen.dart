@@ -15,10 +15,7 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _complaints = [];
-  String? _userRole;
   int? _uid;
-  final _formKey = GlobalKey<FormState>();
-  final _textController = TextEditingController();
 
   @override
   void initState() {
@@ -29,7 +26,6 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
   Future<void> _initializeApiService() async {
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
-    _userRole = await _apiService.getUserType();
     _uid = widget.patientUid ?? int.tryParse(await _apiService.getUserId() ?? '');
     _loadComplaints();
   }
@@ -50,185 +46,60 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
     }
   }
 
-  Future<void> _addComplaint() async {
-    if (!_formKey.currentState!.validate()) return;
-    
-    try {
-      await _apiService.addPatientComplaint(uid: _uid, text: _textController.text);
-      _textController.clear();
-      Navigator.pop(context); // Close dialog
-      _loadComplaints();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Complaint added successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to add complaint: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
-  Future<void> _deleteComplaint(int id) async {
-    try {
-      await _apiService.deletePatientComplaint(id: id);
-      _loadComplaints();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Complaint deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete complaint: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Complaints'),
+        title: const Text('Complaints', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.redAccent),
       ),
-      floatingActionButton: _userRole == 'doctor'
-          ? FloatingActionButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Add Complaint'),
-                    content: Form(
-                      key: _formKey,
-                      child: TextFormField(
-                        controller: _textController,
-                        decoration: const InputDecoration(
-                          labelText: 'Complaint',
-                          border: OutlineInputBorder(),
-                        ),
-                        maxLines: 3,
-                        validator: (value) => value == null || value.isEmpty ? 'Enter a complaint' : null,
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: _addComplaint,
-                        child: const Text('Add Complaint'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              tooltip: 'Add Complaint',
-              child: const Icon(Icons.add),
-            )
-          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: TextStyle(color: Colors.red.shade700),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadComplaints,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
+              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
               : _complaints.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.note_add, size: 64, color: Colors.grey.shade400),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No complaints found.',
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
+                  ? const Center(child: Text('No complaints found.'))
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemCount: _complaints.length,
                       itemBuilder: (context, index) {
-                        final complaint = _complaints[index];
+                        final c = _complaints[index];
                         return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            title: Text(complaint['complaint'] ?? ''),
-                            subtitle: Text(
-                              'Added: ${complaint['createdAt'] != null ? DateTime.parse(complaint['createdAt']).toString().split('.')[0] : 'Unknown'}',
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.sick, color: Colors.redAccent),
+                                    const SizedBox(width: 8),
+                                    Text('Complaint', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.redAccent)),
+                                    const Spacer(),
+                                    if (c['createdAt'] != null)
+                                      Text(
+                                        c['createdAt'].toString().split('T').first,
+                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(c['complaint'] ?? c['text'] ?? '', style: const TextStyle(fontSize: 15)),
+                              ],
                             ),
-                            trailing: _userRole == 'doctor'
-                                ? IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => AlertDialog(
-                                          title: const Text('Delete Complaint'),
-                                          content: const Text('Are you sure you want to delete this complaint?'),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(context),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                                _deleteComplaint(complaint['id']);
-                                              },
-                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                              child: const Text('Delete'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : null,
                           ),
                         );
                       },
                     ),
     );
   }
-} 
+  }

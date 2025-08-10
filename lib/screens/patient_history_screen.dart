@@ -361,189 +361,47 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   }
 
   Widget _buildInvestigationItem(dynamic item) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    final fields = item.entries
+        .where((e) => e.key != 'id' && e.key != 'uid' && e.key != 'createdAt' && e.value != null && e.value.toString().trim().isNotEmpty)
+        .toList();
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.biotech, color: Colors.red.shade600, size: 20),
+            Row(
+              children: [
+                const Icon(Icons.science, color: Colors.deepPurple),
+                const SizedBox(width: 8),
+                Text('Investigation', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
+                const Spacer(),
+                if (item['createdAt'] != null)
+                  Text(
+                    item['createdAt'].toString().split('T').first,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Laboratory Investigations',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
+            const SizedBox(height: 10),
+            if (fields.isNotEmpty)
+              ...fields.map<Widget>((e) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.circle, size: 8, color: Colors.deepPurple),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text('${e.key}: ${e.value}', style: const TextStyle(fontSize: 15))),
+                      ],
+                    ),
+                  )),
+            if (fields.isEmpty)
+              const Text('No data', style: TextStyle(color: Colors.grey)),
           ],
         ),
-        const SizedBox(height: 12),
-        // Blood Count Section
-        if (item['Hb'] != null || item['Total_leukocyte_count'] != null || item['Platelet_count'] != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Complete Blood Count', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red.shade700)),
-                const SizedBox(height: 8),
-                if (item['Hb'] != null)
-                  Text('Hemoglobin: ${item['Hb']}'),
-                if (item['Total_leukocyte_count'] != null)
-                  Text('Total Leukocyte Count: ${item['Total_leukocyte_count']}'),
-                if (item['Differential_count'] != null)
-                  Text('Differential Count: ${item['Differential_count']}'),
-                if (item['Platelet_count'] != null)
-                  Text('Platelet Count: ${item['Platelet_count']}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Inflammatory Markers
-        if (item['ESR'] != null || item['CRP'] != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Inflammatory Markers', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
-                const SizedBox(height: 8),
-                if (item['ESR'] != null)
-                  Text('ESR: ${item['ESR']}'),
-                if (item['CRP'] != null)
-                  Text('CRP: ${item['CRP']}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Liver Function Tests
-        if (item['Lft_total_bilirubin'] != null || item['AST'] != null || item['ALT'] != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Liver Function Tests', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade700)),
-                const SizedBox(height: 8),
-                if (item['Lft_total_bilirubin'] != null)
-                  Text('Total Bilirubin: ${item['Lft_total_bilirubin']}'),
-                if (item['Lft_direct_bilirubin'] != null)
-                  Text('Direct Bilirubin: ${item['Lft_direct_bilirubin']}'),
-                if (item['AST'] != null)
-                  Text('AST: ${item['AST']}'),
-                if (item['ALT'] != null)
-                  Text('ALT: ${item['ALT']}'),
-                if (item['Albumin'] != null)
-                  Text('Albumin: ${item['Albumin']}'),
-                if (item['Total_protein'] != null)
-                  Text('Total Protein: ${item['Total_protein']}'),
-                if (item['GGT'] != null)
-                  Text('GGT: ${item['GGT']}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Kidney Function Tests
-        if (item['Urea'] != null || item['creatinine'] != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Kidney Function Tests', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue.shade700)),
-                const SizedBox(height: 8),
-                if (item['Urea'] != null)
-                  Text('Urea: ${item['Urea']}'),
-                if (item['creatinine'] != null)
-                  Text('Creatinine: ${item['creatinine']}'),
-                if (item['uric_acid'] != null)
-                  Text('Uric Acid: ${item['uric_acid']}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Urine Tests
-        if (item['Urine_routine'] != null || item['Urine_PCR'] != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.yellow.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Urine Tests', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.yellow.shade700)),
-                const SizedBox(height: 8),
-                if (item['Urine_routine'] != null)
-                  Text('Urine Routine: ${item['Urine_routine']}'),
-                if (item['Urine_PCR'] != null)
-                  Text('Urine PCR: ${item['Urine_PCR']}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Immunological Tests
-        if (item['RA_factor'] != null || item['ANTI_CCP'] != null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.purple.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Immunological Tests', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple.shade700)),
-                const SizedBox(height: 8),
-                if (item['RA_factor'] != null)
-                  Text('RA Factor: ${item['RA_factor']}'),
-                if (item['ANTI_CCP'] != null)
-                  Text('Anti-CCP: ${item['ANTI_CCP']}'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Metadata
-        if (item['id'] != null)
-          Text('ID: ${item['id']}', style: TextStyle(color: Colors.grey.shade600)),
-        if (item['uid'] != null)
-          Text('Patient ID: ${item['uid']}', style: TextStyle(color: Colors.grey.shade600)),
-        if (item['createdAt'] != null)
-          Text('Date: ${item['createdAt']}', style: TextStyle(color: Colors.grey.shade600)),
-      ],
+      ),
     );
   }
 

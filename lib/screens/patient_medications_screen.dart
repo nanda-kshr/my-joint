@@ -80,63 +80,66 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medications'),
+        title: const Text('Medications', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.blueAccent),
       ),
-      floatingActionButton: _userRole == 'doctor'
-          ? FloatingActionButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Add Medication'),
-                    content: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          TextFormField(
-                            controller: _textController,
-                            decoration: const InputDecoration(labelText: 'Medication'),
-                            validator: (value) => value == null || value.isEmpty ? 'Enter a value' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _addMedication,
-                              child: const Text('Add Medication'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              tooltip: 'Add Medication',
-              child: const Icon(Icons.add),
-            )
-          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
               : _medications.isEmpty
                   ? const Center(child: Text('No medications found.'))
-                  : ListView.builder(
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemCount: _medications.length,
                       itemBuilder: (context, index) {
                         final c = _medications[index];
+                        final meds = c['medications'] is List ? c['medications'] : [];
                         return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            title: Text(c['text'] ?? ''),
-                            subtitle: Text('Added: ${c['createdAt'] ?? ''}'),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.medication, color: Colors.blueAccent),
+                                    const SizedBox(width: 8),
+                                    Text('Prescription', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.blueAccent)),
+                                    const Spacer(),
+                                    if (c['createdAt'] != null)
+                                      Text(
+                                        c['createdAt'].toString().split('T').first,
+                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                if (meds.isNotEmpty)
+                                  ...meds.map<Widget>((m) => Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 2),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.circle, size: 8, color: Colors.blueAccent),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                '${m['name'] ?? ''} (${m['dose'] ?? ''}${m['period'] != null ? ', ' + m['period'] : ''})',
+                                                style: const TextStyle(fontSize: 15),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )),
+                                if (meds.isEmpty)
+                                  const Text('No medications', style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
                           ),
                         );
                       },

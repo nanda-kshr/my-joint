@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'das28_sdai_flow.dart';
 
 class PatientDiseaseScoresScreen extends StatefulWidget {
   final int? patientUid;
@@ -301,75 +302,9 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
       floatingActionButton: _userRole == 'doctor'
           ? FloatingActionButton(
               onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Add Disease Score'),
-                    content: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextFormField(
-                            controller: _sdaiController,
-                            decoration: const InputDecoration(
-                              labelText: 'SDAI Score',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter SDAI score';
-                              }
-                              final score = double.tryParse(value);
-                              if (score == null) {
-                                return 'Please enter a valid number';
-                              }
-                              if (score < 0 || score > 100) {
-                                return 'Score must be between 0 and 100';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _das28crpController,
-                            decoration: const InputDecoration(
-                              labelText: 'DAS28-CRP Score',
-                              border: OutlineInputBorder(),
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter DAS28-CRP score';
-                              }
-                              final score = double.tryParse(value);
-                              if (score == null) {
-                                return 'Please enter a valid number';
-                              }
-                              if (score < 0 || score > 10) {
-                                return 'Score must be between 0 and 10';
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _addDiseaseScore();
-                        },
-                        child: const Text('Add Score'),
-                      ),
-                    ],
-                  ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Das28SdaiFlowScreen()),
                 );
               },
               tooltip: 'Add Disease Score',

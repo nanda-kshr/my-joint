@@ -80,58 +80,52 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Treatments'),
+        title: const Text('Treatments', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.teal),
       ),
-      floatingActionButton: _userRole == 'doctor'
-          ? FloatingActionButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Add Treatment'),
-                    content: Form(
-                      key: _formKey,
-                      child: TextFormField(
-                        controller: _textController,
-                        decoration: const InputDecoration(labelText: 'Treatment'),
-                        validator: (value) => value == null || value.isEmpty ? 'Enter a value' : null,
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _addTreatment,
-                          child: const Text('Add Treatment'),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              tooltip: 'Add Treatment',
-              child: const Icon(Icons.add),
-            )
-          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
               : _treatments.isEmpty
                   ? const Center(child: Text('No treatments found.'))
-                  : ListView.builder(
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemCount: _treatments.length,
                       itemBuilder: (context, index) {
                         final c = _treatments[index];
                         return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            title: Text(c['text'] ?? ''),
-                            subtitle: Text('Added: ${c['createdAt'] ?? ''}'),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.healing, color: Colors.teal),
+                                    const SizedBox(width: 8),
+                                    Text('Treatment', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.teal)),
+                                    const Spacer(),
+                                    if (c['createdAt'] != null)
+                                      Text(
+                                        c['createdAt'].toString().split('T').first,
+                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text('${c['treatment'] ?? ''}${c['name'] != null ? ' - ' + c['name'] : ''}', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+                                if (c['dose'] != null) Text('Dose: ${c['dose']}'),
+                                if (c['route'] != null) Text('Route: ${c['route']}'),
+                                if (c['frequency_text'] != null) Text('Frequency: ${c['frequency_text']}'),
+                                if (c['Time_Period'] != null) Text('Duration: ${c['Time_Period']}'),
+                              ],
+                            ),
                           ),
                         );
                       },

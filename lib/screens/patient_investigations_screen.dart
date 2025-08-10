@@ -80,58 +80,63 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Investigations'),
+        title: const Text('Investigations', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.deepPurple),
       ),
-      floatingActionButton: _userRole == 'doctor'
-          ? FloatingActionButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Add Investigation'),
-                    content: Form(
-                      key: _formKey,
-                      child: TextFormField(
-                        controller: _textController,
-                        decoration: const InputDecoration(labelText: 'Investigation'),
-                        validator: (value) => value == null || value.isEmpty ? 'Enter a value' : null,
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _addInvestigation,
-                          child: const Text('Add Investigation'),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              tooltip: 'Add Investigation',
-              child: const Icon(Icons.add),
-            )
-          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
               : _investigations.isEmpty
                   ? const Center(child: Text('No investigations found.'))
-                  : ListView.builder(
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemCount: _investigations.length,
                       itemBuilder: (context, index) {
                         final c = _investigations[index];
+                        final fields = c.entries
+                          .where((e) => e.key != 'id' && e.key != 'uid' && e.key != 'createdAt' && e.value != null && e.value.toString().trim().isNotEmpty)
+                          .toList();
                         return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            title: Text(c['text'] ?? ''),
-                            subtitle: Text('Added: ${c['createdAt'] ?? ''}'),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.science, color: Colors.deepPurple),
+                                    const SizedBox(width: 8),
+                                    Text('Investigation', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
+                                    const Spacer(),
+                                    if (c['createdAt'] != null)
+                                      Text(
+                                        c['createdAt'].toString().split('T').first,
+                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                if (fields.isNotEmpty)
+                                  ...fields.map<Widget>((e) => Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 2),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.circle, size: 8, color: Colors.deepPurple),
+                                            const SizedBox(width: 6),
+                                            Expanded(child: Text('${e.key}: ${e.value}', style: const TextStyle(fontSize: 15))),
+                                          ],
+                                        ),
+                                      )),
+                                if (fields.isEmpty)
+                                  const Text('No data', style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
                           ),
                         );
                       },

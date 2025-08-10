@@ -4,12 +4,12 @@ import '../models/joint.dart';
 
 class SimplifiedMannequinPainter extends CustomPainter {
   final List<Joint> joints;
-  final String? selectedJoint;
+  final Set<String> selectedJoints;
   final bool drawJointsOnly;
   
   SimplifiedMannequinPainter({
     required this.joints,
-    this.selectedJoint,
+    required this.selectedJoints,
     this.drawJointsOnly = false,
   });
   
@@ -50,7 +50,7 @@ class SimplifiedMannequinPainter extends CustomPainter {
         joint.position.dy * size.height,
       );
       
-      bool isSelected = joint.name == selectedJoint;
+  bool isSelected = selectedJoints.contains(joint.name);
       
       // Get joint size based on type
       double width = joint.isFingerOrToe ? 10.0 : 25.0;
@@ -293,6 +293,6 @@ class SimplifiedMannequinPainter extends CustomPainter {
   
   @override
   bool shouldRepaint(SimplifiedMannequinPainter oldDelegate) {
-    return oldDelegate.selectedJoint != selectedJoint;
+  return oldDelegate.selectedJoints != selectedJoints;
   }
 }

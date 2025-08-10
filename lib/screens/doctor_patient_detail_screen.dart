@@ -1,4 +1,5 @@
 import 'package:my_joints/screens/patient_disease_scores_screen.dart';
+import 'das28_sdai_flow.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -234,7 +235,14 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   title: 'Disease Scores',
                   color: Colors.green,
                   fetcher: () => _apiService.getPatientDiseaseScores(uid: _uid),
-                  onCreate: () => _showCreateDialog('disease_score'),
+                  onCreate: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Das28SdaiFlowScreen(patientUid: _uid),
+                      ),
+                    );
+                  },
                   itemBuilder: (item) => ListTile(
                     title: Text('SDAI: ${item['SDAI'] ?? item['sdai'] ?? 'N/A'}'),
                     subtitle: Column(
@@ -273,11 +281,36 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   color: Colors.teal,
                   fetcher: () => _apiService.getPatientInvestigations(uid: _uid),
                   onCreate: () => _showCreateDialog('investigation'),
-                  itemBuilder: (item) => ListTile(
-                    title: Text('Hb: ${item['Hb'] ?? 'N/A'}'),
-                    subtitle: item['createdAt'] != null
-                        ? Text('Date: ${item['createdAt']}')
-                        : null,
+                  itemBuilder: (item) => Card(
+                    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                    elevation: 1,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...item.entries
+                            .where((e) => e.key != 'id' && e.key != 'uid' && e.key != 'createdAt' && e.value != null && e.value.toString().trim().isNotEmpty)
+                            .map((e) =>
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 1.5),
+                                child: Row(
+                                  children: [
+                                    Text('${e.key}: ', style: const TextStyle(fontWeight: FontWeight.w600)),
+                                    Expanded(child: Text('${e.value}', style: const TextStyle(color: Colors.black87))),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          if (item['createdAt'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text('Date: ${item['createdAt']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 _buildDataCard(
@@ -546,44 +579,6 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   onPressed: () async {
                     if (controller.text.trim().isEmpty) return;
                     await _apiService.createPatientComorbidity(uid: _uid, text: controller.text.trim());
-                    if (mounted) setState(() {});
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Create'),
-                ),
-              ],
-            );
-          case 'disease_score':
-            final sdaiController = TextEditingController();
-            final dasController = TextEditingController();
-            return AlertDialog(
-              title: const Text('Add Disease Score'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: sdaiController,
-                    decoration: const InputDecoration(labelText: 'SDAI'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  TextField(
-                    controller: dasController,
-                    decoration: const InputDecoration(labelText: 'DAS28-CRP'),
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final sdai = double.tryParse(sdaiController.text.trim());
-                    final das = double.tryParse(dasController.text.trim());
-                    if (sdai == null || das == null) return;
-                    await _apiService.createPatientDiseaseScore(uid: _uid, sdai: sdai, das28crp: das);
                     if (mounted) setState(() {});
                     Navigator.pop(context);
                   },

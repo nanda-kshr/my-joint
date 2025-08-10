@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'patient_complaints_screen.dart';
+import 'patient_comorbidities_screen.dart';
+import 'patient_disease_scores_screen.dart';
+import 'patient_medications_screen.dart';
+import 'patient_investigations_screen.dart';
+import 'patient_treatments_screen.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
   const PatientDashboardScreen({super.key});
@@ -136,15 +142,10 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             'Complaints',
                             Icons.note_add,
                             Colors.blue,
-                            () => _showDataDialog(
+                            () => Navigator.push(
                               context,
-                              title: 'Complaints',
-                              fetcher: () => _apiService.getPatientComplaints(),
-                              itemBuilder: (item) => ListTile(
-                                title: Text(item['complaint'] ?? item['text'] ?? ''),
-                                subtitle: item['createdAt'] != null
-                                    ? Text('Added: ' + (item['createdAt'] ?? ''))
-                                    : null,
+                              MaterialPageRoute(
+                                builder: (context) => PatientComplaintsScreen(patientUid: _userData?['uid']),
                               ),
                             ),
                           ),
@@ -153,15 +154,10 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             'Comorbidities',
                             Icons.medical_services,
                             Colors.orange,
-                            () => _showDataDialog(
+                            () => Navigator.push(
                               context,
-                              title: 'Comorbidities',
-                              fetcher: () => _apiService.getPatientComorbidities(),
-                              itemBuilder: (item) => ListTile(
-                                title: Text(item['text'] ?? ''),
-                                subtitle: item['createdAt'] != null
-                                    ? Text('Added: ' + (item['createdAt'] ?? ''))
-                                    : null,
+                              MaterialPageRoute(
+                                builder: (context) => PatientComorbiditiesScreen(patientUid: _userData?['uid']),
                               ),
                             ),
                           ),
@@ -170,20 +166,10 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             'Disease Scores',
                             Icons.analytics,
                             Colors.green,
-                            () => _showDataDialog(
+                            () => Navigator.push(
                               context,
-                              title: 'Disease Scores',
-                              fetcher: () => _apiService.getPatientDiseaseScores(),
-                              itemBuilder: (item) => ListTile(
-                                title: Text('SDAI: ${item['SDAI'] ?? item['sdai'] ?? 'N/A'}'),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('DAS28-CRP: ${item['DAS_28_CRP'] ?? item['das_28_crp'] ?? 'N/A'}'),
-                                    if (item['createdAt'] != null)
-                                      Text('Date: ${item['createdAt']}'),
-                                  ],
-                                ),
+                              MaterialPageRoute(
+                                builder: (context) => PatientDiseaseScoresScreen(patientUid: _userData?['uid']),
                               ),
                             ),
                           ),
@@ -192,23 +178,11 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             'Medications',
                             Icons.medication,
                             Colors.purple,
-                            () => _showDataDialog(
+                            () => Navigator.push(
                               context,
-                              title: 'Medications',
-                              fetcher: () => _apiService.getPatientMedications(),
-                              itemBuilder: (item) {
-                                final meds = item['medications'] is List
-                                    ? item['medications']
-                                    : [];
-                                return ListTile(
-                                  title: Text(meds.isNotEmpty
-                                      ? meds.map((m) => m['name']).join(', ')
-                                      : 'No medications'),
-                                  subtitle: item['createdAt'] != null
-                                      ? Text('Added: ' + (item['createdAt'] ?? ''))
-                                      : null,
-                                );
-                              },
+                              MaterialPageRoute(
+                                builder: (context) => PatientMedicationsScreen(patientUid: _userData?['uid']),
+                              ),
                             ),
                           ),
                           _buildDashboardItem(
@@ -216,15 +190,10 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             'Investigations',
                             Icons.science,
                             Colors.teal,
-                            () => _showDataDialog(
+                            () => Navigator.push(
                               context,
-                              title: 'Investigations',
-                              fetcher: () => _apiService.getPatientInvestigations(),
-                              itemBuilder: (item) => ListTile(
-                                title: Text('Hb: ${item['Hb'] ?? 'N/A'}'),
-                                subtitle: item['createdAt'] != null
-                                    ? Text('Date: ${item['createdAt']}')
-                                    : null,
+                              MaterialPageRoute(
+                                builder: (context) => PatientInvestigationsScreen(patientUid: _userData?['uid']),
                               ),
                             ),
                           ),
@@ -233,32 +202,14 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             'Treatments',
                             Icons.healing,
                             Colors.indigo,
-                            () => _showDataDialog(
+                            () => Navigator.push(
                               context,
-                              title: 'Treatments',
-                              fetcher: () => _apiService.getPatientTreatments(),
-                              itemBuilder: (item) => ListTile(
-                                title: Text(item['treatment'] ?? ''),
-                                subtitle: item['createdAt'] != null
-                                    ? Text('Started: ' + (item['createdAt'] ?? ''))
-                                    : null,
+                              MaterialPageRoute(
+                                builder: (context) => PatientTreatmentsScreen(patientUid: _userData?['uid']),
                               ),
                             ),
                           ),
-                          _buildDashboardItem(
-                            context,
-                            'Referrals',
-                            Icons.people,
-                            Colors.red,
-                            () => _showDataDialog(
-                              context,
-                              title: 'Referrals',
-                              fetcher: () => _apiService.getPatientReferrals(),
-                              itemBuilder: (item) => ListTile(
-                                title: Text(item['text'] ?? ''),
-                              ),
-                            ),
-                          ),
+                          // Referrals screen not available for patients
                         ],
                       ),
                     ],
@@ -301,61 +252,5 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
     );
   }
 
-  void _showDataDialog(BuildContext context, {
-    required String title,
-    required Future<List<dynamic>> Function() fetcher,
-    required Widget Function(dynamic item) itemBuilder,
-  }) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return FutureBuilder<List<dynamic>>(
-          future: fetcher(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return AlertDialog(
-                title: Text(title),
-                content: const SizedBox(
-                  height: 80,
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              );
-            } else if (snapshot.hasError) {
-              return AlertDialog(
-                title: Text(title),
-                content: Text('Error: ${snapshot.error}'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Close'),
-                  ),
-                ],
-              );
-            } else {
-              final data = snapshot.data ?? [];
-              return AlertDialog(
-                title: Text(title),
-                content: data.isEmpty
-                    ? const Text('No data found.')
-                    : SizedBox(
-                        width: double.maxFinite,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: data.length,
-                          itemBuilder: (context, index) => itemBuilder(data[index]),
-                        ),
-                      ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Close'),
-                  ),
-                ],
-              );
-            }
-          },
-        );
-      },
-    );
-  }
-} 
+// ...existing code...
+}
