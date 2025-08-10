@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/joint.dart';
-import '../models/assessment_phase.dart';
-import '../painters/simplified_mannequin_painter.dart';
 
 class ZoomedBodyRegion extends StatefulWidget {
   final List<Joint> joints;

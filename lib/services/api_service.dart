@@ -5,7 +5,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'dart:developer' as developer;
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.101.109:3000/api/v1';
+  static const String baseUrl = 'http://localhost:3000/api';
   static const String tokenKey = 'auth_token';
   static const String userTypeKey = 'user_type';
   static const String userIdKey = 'user_id';
@@ -94,11 +94,13 @@ class ApiService {
     developer.log('Attempting patient login for email: $email');
     try {
       final response = await _client.post(
-        Uri.parse('$baseUrl/patient/login'),
+        Uri.parse('$baseUrl/auth/signin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
+          'user': 'patient',
           'email': email,
           'password': password,
+          'role': 'patient',
         }),
       );
 
@@ -109,12 +111,12 @@ class ApiService {
         final data = jsonDecode(response.body);
         await setToken(data['token']);
         await _prefs.setString(userTypeKey, 'patient');
-        await _prefs.setString(userIdKey, data['patient']['id']);
+        await _prefs.setString(userIdKey, data['user']['id'].toString());
         developer.log('Patient login successful');
       } else {
         final errorData = jsonDecode(response.body);
-        developer.log('Login failed: ${errorData['message']}');
-        throw Exception(errorData['message'] ?? 'Login failed');
+        developer.log('Login failed: ${errorData['error']}');
+        throw Exception(errorData['error'] ?? 'Login failed');
       }
     } catch (e, stackTrace) {
       developer.log('Login error: $e', error: e, stackTrace: stackTrace);
@@ -125,7 +127,7 @@ class ApiService {
   Future<void> patientRegister(Map<String, dynamic> data) async {
     developer.log('Attempting patient registration with data: $data');
     try {
-      final url = Uri.parse('$baseUrl/patient/register');
+      final url = Uri.parse('$baseUrl/patient/signup');
       developer.log('Making POST request to: $url');
       
       final headers = {'Content-Type': 'application/json'};
@@ -143,16 +145,14 @@ class ApiService {
       developer.log('Response headers: ${response.headers}');
       developer.log('Response body: ${response.body}');
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        await setToken(responseData['token']);
-        await _prefs.setString(userTypeKey, 'patient');
-        await _prefs.setString(userIdKey, responseData['patient']['id']);
+      if (response.statusCode == 201) {
+        // Registration successful, but no token returned
+        // User needs to login after registration
         developer.log('Patient registration successful');
       } else {
         final errorData = jsonDecode(response.body);
-        developer.log('Registration failed with status ${response.statusCode}: ${errorData['message']}');
-        throw Exception(errorData['message'] ?? 'Registration failed');
+        developer.log('Registration failed with status ${response.statusCode}: ${errorData['error']}');
+        throw Exception(errorData['error'] ?? 'Registration failed');
       }
     } catch (e, stackTrace) {
       developer.log('Registration error: $e', error: e, stackTrace: stackTrace);
@@ -168,11 +168,13 @@ class ApiService {
     developer.log('Attempting doctor login for email: $email');
     try {
       final response = await _client.post(
-        Uri.parse('$baseUrl/doctor/login'),
+        Uri.parse('$baseUrl/auth/signin'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
+          'user': 'doctor',
           'email': email,
           'password': password,
+          'role': 'doctor',
         }),
       );
 
@@ -183,12 +185,12 @@ class ApiService {
         final data = jsonDecode(response.body);
         await setToken(data['token']);
         await _prefs.setString(userTypeKey, 'doctor');
-        await _prefs.setString(userIdKey, data['doctor']['id']);
+        await _prefs.setString(userIdKey, data['user']['id'].toString());
         developer.log('Doctor login successful');
       } else {
         final errorData = jsonDecode(response.body);
-        developer.log('Login failed: ${errorData['message']}');
-        throw Exception(errorData['message'] ?? 'Login failed');
+        developer.log('Login failed: ${errorData['error']}');
+        throw Exception(errorData['error'] ?? 'Login failed');
       }
     } catch (e, stackTrace) {
       developer.log('Login error: $e', error: e, stackTrace: stackTrace);
@@ -199,7 +201,7 @@ class ApiService {
   Future<void> doctorRegister(Map<String, dynamic> data) async {
     developer.log('Attempting doctor registration with data: $data');
     try {
-      final url = Uri.parse('$baseUrl/doctor/register');
+      final url = Uri.parse('$baseUrl/doctor/signup');
       developer.log('Making POST request to: $url');
       
       final headers = {'Content-Type': 'application/json'};
@@ -217,16 +219,14 @@ class ApiService {
       developer.log('Response headers: ${response.headers}');
       developer.log('Response body: ${response.body}');
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        await setToken(responseData['token']);
-        await _prefs.setString(userTypeKey, 'doctor');
-        await _prefs.setString(userIdKey, responseData['doctor']['id']);
+      if (response.statusCode == 201) {
+        // Registration successful, but no token returned
+        // User needs to login after registration
         developer.log('Doctor registration successful');
       } else {
         final errorData = jsonDecode(response.body);
-        developer.log('Registration failed with status ${response.statusCode}: ${errorData['message']}');
-        throw Exception(errorData['message'] ?? 'Registration failed');
+        developer.log('Registration failed with status ${response.statusCode}: ${errorData['error']}');
+        throw Exception(errorData['error'] ?? 'Registration failed');
       }
     } catch (e, stackTrace) {
       developer.log('Registration error: $e', error: e, stackTrace: stackTrace);
@@ -238,8 +238,10 @@ class ApiService {
   }
 
   // Patient Data
-  Future<List<dynamic>> getComplaints() async {
-    final response = await _request('GET', '/patient/complaints');
+  Future<List<dynamic>> getPatientComplaints({int? uid}) async {
+    final id = uid ?? int.tryParse(await getUserId() ?? '');
+    if (id == null) throw Exception('No patient UID');
+    final response = await _request('GET', '/patient/complaints?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -247,54 +249,49 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getCoMorbidities() async {
-    final response = await _request('GET', '/patient/co-morbidities');
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load co-morbidities');
+  Future<void> addPatientComplaint({required int? uid, required String text}) async {
+    if (uid == null) throw Exception('No patient UID');
+    final response = await _request('POST', '/patient/complaints', body: {
+      'uid': uid,
+      'text': text,
+    });
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add complaint');
     }
   }
 
-  Future<List<dynamic>> getMedications() async {
-    final response = await _request('GET', '/patient/medications');
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load medications');
+  Future<void> deletePatientComplaint({required int id}) async {
+    final response = await _request('DELETE', '/patient/complaints', body: {'id': id});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete complaint');
     }
   }
 
-  Future<List<dynamic>> getInvestigations() async {
-    final response = await _request('GET', '/patient/investigations');
+  Future<List<dynamic>> getPatientReferrals({int? uid}) async {
+    final id = uid ?? int.tryParse(await getUserId() ?? '');
+    if (id == null) throw Exception('No patient UID');
+    final response = await _request('GET', '/patient/referrals?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load investigations');
+      throw Exception('Failed to load referrals');
     }
   }
 
-  Future<List<dynamic>> getDiseaseScores() async {
-    final response = await _request('GET', '/patient/disease-scores');
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load disease scores');
-    }
-  }
-
-  Future<List<dynamic>> getTreatments() async {
-    final response = await _request('GET', '/patient/treatments');
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load treatments');
+  Future<void> addPatientReferral({required int? uid, required String text}) async {
+    if (uid == null) throw Exception('No patient UID');
+    final response = await _request('POST', '/patient/referrals', body: {
+      'uid': uid,
+      'text': text,
+    });
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add referral');
     }
   }
 
   // Doctor Data
   Future<List<dynamic>> getPatients() async {
-    final response = await _request('GET', '/doctor/patients');
+    final response = await _request('GET', '/doctor/patient');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -324,7 +321,7 @@ class ApiService {
   Future<Map<String, dynamic>> saveDiseaseScore(Map<String, dynamic> scoreData) async {
     final response = await _request(
       'POST',
-      '/patient/disease-scores',
+      '/patient/disease_score',
       body: scoreData,
     );
 
@@ -400,4 +397,247 @@ class ApiService {
       rethrow;
     }
   }
-} 
+
+  Future<String?> getUserId() async {
+    return _prefs.getString(userIdKey);
+  }
+
+  Future<List<dynamic>> getPatientComorbidities({int? uid}) async {
+    final id = uid ?? int.tryParse(await getUserId() ?? '');
+    if (id == null) throw Exception('No patient UID');
+    final response = await _request('GET', '/patient/comorbidities?uid=$id');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load comorbidities');
+    }
+  }
+
+  Future<void> addPatientComorbidity({required int? uid, required String text}) async {
+    if (uid == null) throw Exception('No patient UID');
+    final response = await _request('POST', '/patient/comorbidities', body: {
+      'uid': uid,
+      'text': text,
+    });
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add comorbidity');
+    }
+  }
+
+  Future<void> deletePatientComorbidity({required int id}) async {
+    final response = await _request('DELETE', '/patient/comorbidities', body: {'id': id});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete comorbidity');
+    }
+  }
+
+  Future<List<dynamic>> getPatientDiseaseScores({int? uid}) async {
+    final id = uid ?? int.tryParse(await getUserId() ?? '');
+    if (id == null) throw Exception('No patient UID');
+    final response = await _request('GET', '/patient/disease_score?uid=$id');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load disease scores');
+    }
+  }
+
+  Future<void> addPatientDiseaseScore({required int? uid, required double sdai, required double das28crp}) async {
+    if (uid == null) throw Exception('No patient UID');
+    final response = await _request('POST', '/patient/disease_score', body: {
+      'uid': uid,
+      'sdai': sdai,
+      'das_28_crp': das28crp,
+    });
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add disease score');
+    }
+  }
+
+  Future<void> deletePatientDiseaseScore({required int id}) async {
+    final response = await _request('DELETE', '/patient/disease_score', body: {'id': id});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete disease score');
+    }
+  }
+
+  Future<List<dynamic>> getPatientMedications({int? uid}) async {
+    final id = uid ?? int.tryParse(await getUserId() ?? '');
+    if (id == null) throw Exception('No patient UID');
+    final response = await _request('GET', '/patient/medications?uid=$id');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load medications');
+    }
+  }
+
+  Future<void> addPatientMedication({required int? uid, required String medications}) async {
+    if (uid == null) throw Exception('No patient UID');
+    final response = await _request('POST', '/patient/medications', body: {
+      'uid': uid,
+      'medications': medications,
+    });
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add medication');
+    }
+  }
+
+  Future<void> deletePatientMedication({required int id}) async {
+    final response = await _request('DELETE', '/patient/medications', body: {'id': id});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete medication');
+    }
+  }
+
+  Future<List<dynamic>> getPatientInvestigations({int? uid}) async {
+    final id = uid ?? int.tryParse(await getUserId() ?? '');
+    if (id == null) throw Exception('No patient UID');
+    final response = await _request('GET', '/patient/investigation?uid=$id');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load investigations');
+    }
+  }
+
+  Future<void> addPatientInvestigation({required int? uid, required Map<String, dynamic> data}) async {
+    if (uid == null) throw Exception('No patient UID');
+    final body = {'uid': uid, ...data};
+    final response = await _request('POST', '/patient/investigation', body: body);
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add investigation');
+    }
+  }
+
+  Future<void> deletePatientInvestigation({required int id}) async {
+    final response = await _request('DELETE', '/patient/investigation', body: {'id': id});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete investigation');
+    }
+  }
+
+  Future<List<dynamic>> getPatientTreatments({int? uid}) async {
+    final id = uid ?? int.tryParse(await getUserId() ?? '');
+    if (id == null) throw Exception('No patient UID');
+    final response = await _request('GET', '/patient/treatments?uid=$id');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load treatments');
+    }
+  }
+
+  Future<void> addPatientTreatment({required int? uid, required Map<String, dynamic> data}) async {
+    if (uid == null) throw Exception('No patient UID');
+    final body = {'uid': uid, ...data};
+    final response = await _request('POST', '/patient/treatments', body: body);
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add treatment');
+    }
+  }
+
+  Future<void> deletePatientTreatment({required int id}) async {
+    final response = await _request('DELETE', '/patient/treatments', body: {'id': id});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete treatment');
+    }
+  }
+
+  Future<void> deletePatientReferral({required int id}) async {
+    final response = await _request('DELETE', '/patient/referrals', body: {'id': id});
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete referral');
+    }
+  }
+
+  Future<List<dynamic>> getDoctorPatients(int did) async {
+    final response = await _request('GET', '/doctor/patient?did=$did');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load doctor patients');
+    }
+  }
+
+  Future<void> linkDoctorPatient({required String patientEmail, required int did}) async {
+    final response = await _request('POST', '/doctor/patient', body: {
+      'patient_email': patientEmail,
+      'did': did,
+    });
+    if (response.statusCode != 201) {
+      throw Exception('Failed to link doctor and patient');
+    }
+  }
+
+  // --- CREATE WRAPPERS for DoctorPatientDetailScreen ---
+  Future<void> createPatientComplaint({required int uid, required String text}) => addPatientComplaint(uid: uid, text: text);
+  Future<void> createPatientComorbidity({required int uid, required String text}) => addPatientComorbidity(uid: uid, text: text);
+  Future<void> createPatientDiseaseScore({required int uid, required double sdai, required double das28crp}) => addPatientDiseaseScore(uid: uid, sdai: sdai, das28crp: das28crp);
+  Future<void> createPatientMedications({required int uid, required List<Map<String, String>> medications}) => addPatientMedication(uid: uid, medications: jsonEncode(medications));
+  Future<void> createPatientInvestigation(Map<String, dynamic> data) => addPatientInvestigation(uid: data['uid'], data: data);
+  Future<void> createPatientTreatment({required int uid, required String treatment, required String name, required String dose, required String route, required int frequency, required String frequencyText, required int timePeriod}) => addPatientTreatment(uid: uid, data: {
+    'treatment': treatment,
+    'name': name,
+    'dose': dose,
+    'route': route,
+    'frequency': frequency,
+    'frequency_text': frequencyText,
+    'Time_Period': timePeriod,
+  });
+  Future<void> createPatientReferral({required int uid, required String text}) => addPatientReferral(uid: uid, text: text);
+
+  Future<void> sendOtp(String email) async {
+    final response = await _request(
+      'POST',
+      '/auth/forgot-password',
+      body: {'email': email},
+    );
+    if (response.statusCode != 200) {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Failed to send OTP');
+    }
+  }
+
+  Future<void> verifyOtp(String email, String otp) async {
+    final response = await _request(
+      'POST',
+      '/auth/verify-otp',
+      body: {'email': email, 'otp': otp},
+    );
+    if (response.statusCode != 200) {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Failed to verify OTP');
+    }
+  }
+
+  Future<void> resetPassword(String email, String otp, String password) async {
+    final response = await _request(
+      'POST',
+      '/auth/reset-password',
+      body: {'email': email, 'otp': otp, 'password': password},
+    );
+    if (response.statusCode != 200) {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Failed to reset password');
+    }
+  }
+
+  Future<String> testAuth() async {
+    final response = await _request('GET', '/test-auth');
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to test auth');
+    }
+  }
+
+  Future<String> testJwt() async {
+    final response = await _request('GET', '/test-jwt');
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception('Failed to test JWT');
+    }
+  }
+}

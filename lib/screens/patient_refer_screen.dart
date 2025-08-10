@@ -3,7 +3,8 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PatientReferScreen extends StatefulWidget {
-  const PatientReferScreen({super.key});
+  final int? patientUid;
+  const PatientReferScreen({super.key, this.patientUid});
 
   @override
   State<PatientReferScreen> createState() => _PatientReferScreenState();
@@ -14,10 +15,10 @@ class _PatientReferScreenState extends State<PatientReferScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _referrals = [];
+  String? _userRole;
+  int? _uid;
   final _formKey = GlobalKey<FormState>();
-  final _friendNameController = TextEditingController();
-  final _friendEmailController = TextEditingController();
-  final _friendPhoneController = TextEditingController();
+  final _textController = TextEditingController();
 
   @override
   void initState() {
@@ -28,12 +29,15 @@ class _PatientReferScreenState extends State<PatientReferScreen> {
   Future<void> _initializeApiService() async {
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
+    _userRole = await _apiService.getUserType();
+    _uid = widget.patientUid ?? int.tryParse(await _apiService.getUserId() ?? '');
     _loadReferrals();
   }
 
   Future<void> _loadReferrals() async {
+    setState(() { _isLoading = true; });
     try {
-      final referrals = await _apiService.getPatientReferrals();
+      final referrals = await _apiService.getPatientReferrals(uid: _uid);
       setState(() {
         _referrals = List<Map<String, dynamic>>.from(referrals);
         _isLoading = false;
@@ -46,150 +50,97 @@ class _PatientReferScreenState extends State<PatientReferScreen> {
     }
   }
 
-  Future<void> _referFriend() async {
+  Future<void> _addReferral() async {
     if (!_formKey.currentState!.validate()) return;
-
     try {
-      final referralData = {
-        'friendName': _friendNameController.text,
-        'friendEmail': _friendEmailController.text,
-        'friendPhone': _friendPhoneController.text,
-      };
-
-      await _apiService.referPatient(referralData);
-      _friendNameController.clear();
-      _friendEmailController.clear();
-      _friendPhoneController.clear();
+      await _apiService.addPatientReferral(uid: _uid, text: _textController.text);
+      _textController.clear();
       _loadReferrals();
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Referral sent successfully')),
+          const SnackBar(content: Text('Referral added successfully')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send referral: $e')),
+          SnackBar(content: Text('Failed to add referral: $e')),
         );
       }
     }
   }
 
   @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Refer a Friend'),
+        title: const Text('Referrals'),
       ),
+      floatingActionButton: _userRole == 'doctor'
+          ? FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Add Referral'),
+                    content: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _textController,
+                            decoration: const InputDecoration(labelText: 'Referral'),
+                            validator: (value) => value == null || value.isEmpty ? 'Enter a value' : null,
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _addReferral,
+                              child: const Text('Add Referral'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              tooltip: 'Add Referral',
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _friendNameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Friend\'s Name',
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your friend\'s name';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _friendEmailController,
-                              decoration: const InputDecoration(
-                                labelText: 'Friend\'s Email',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your friend\'s email';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _friendPhoneController,
-                              decoration: const InputDecoration(
-                                labelText: 'Friend\'s Phone',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.phone,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your friend\'s phone number';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _referFriend,
-                              child: const Text('Send Referral'),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Your Referrals',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _referrals.length,
-                        itemBuilder: (context, index) {
-                          final referral = _referrals[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            child: ListTile(
-                              title: Text(referral['friendName']),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Status: ${referral['status']}'),
-                                  Text('Date: ${referral['date']}'),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+              : _referrals.isEmpty
+                  ? const Center(child: Text('No referrals found.'))
+                  : ListView.builder(
+                      itemCount: _referrals.length,
+                      itemBuilder: (context, index) {
+                        final c = _referrals[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: ListTile(
+                            title: Text(c['text'] ?? ''),
+                            subtitle: Text('Added: ${c['createdAt'] ?? ''}'),
+                          ),
+                        );
+                      },
+                    ),
     );
-  }
-
-  @override
-  void dispose() {
-    _friendNameController.dispose();
-    _friendEmailController.dispose();
-    _friendPhoneController.dispose();
-    super.dispose();
   }
 } 

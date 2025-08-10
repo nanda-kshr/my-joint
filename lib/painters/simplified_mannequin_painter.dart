@@ -254,8 +254,8 @@ class SimplifiedMannequinPainter extends CustomPainter {
   }
   
   void _drawFingers(Canvas canvas, Size size, Offset hand, bool isRight, Paint paint) {
-    final double handWidth = 20.0;
-    final double fingerLength = 15.0;
+    const double handWidth = 20.0;
+    const double fingerLength = 15.0;
     
     for (int i = 0; i < 4; i++) {
       double offset = (i - 1.5) * handWidth/4;
@@ -280,7 +280,7 @@ class SimplifiedMannequinPainter extends CustomPainter {
   }
   
   void _drawFoot(Canvas canvas, Size size, Offset ankle, bool isRight, Paint paint) {
-    final double footLength = 25.0;
+    const double footLength = 25.0;
     final double footDirection = isRight ? 0 : 0;
     
     final Offset footEnd = Offset(

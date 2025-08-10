@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_joints/screens/doctor_patient_detail_screen.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,13 +15,6 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _patients = [];
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _ageController = TextEditingController();
-  final _medicalHistoryController = TextEditingController();
-  String? _selectedGender;
 
   @override
   void initState() {
@@ -36,7 +30,7 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
 
   Future<void> _loadPatients() async {
     try {
-      final patients = await _apiService.getDoctorPatients();
+      final patients = await _apiService.getPatients();
       setState(() {
         _patients = List<Map<String, dynamic>>.from(patients);
         _isLoading = false;
@@ -49,228 +43,106 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
     }
   }
 
-  Future<void> _addPatient() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    try {
-      final patientData = {
-        'name': _nameController.text,
-        'email': _emailController.text,
-        'phone': _phoneController.text,
-        'age': int.parse(_ageController.text),
-        'gender': _selectedGender,
-        'medicalHistory': _medicalHistoryController.text,
-      };
-
-      await _apiService.addDoctorPatient(patientData);
-      _clearForm();
-      _loadPatients();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Patient added successfully')),
+  Future<void> _showLinkPatientDialog() async {
+    final emailController = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Link New Patient'),
+          content: TextField(
+            controller: emailController,
+            decoration: const InputDecoration(hintText: "Patient's Email"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (emailController.text.isNotEmpty) {
+                  try {
+                    final prefs = await SharedPreferences.getInstance();
+                    final did = int.tryParse(prefs.getString('user_id') ?? '');
+                    if (did != null) {
+                      await _apiService.linkDoctorPatient(
+                        patientEmail: emailController.text,
+                        did: did,
+                      );
+                      Navigator.pop(context);
+                      _loadPatients(); // Refresh the list
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not find doctor ID.')),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to link patient: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Link'),
+            ),
+          ],
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add patient: $e')),
-        );
-      }
-    }
-  }
-
-  void _clearForm() {
-    _nameController.clear();
-    _emailController.clear();
-    _phoneController.clear();
-    _ageController.clear();
-    _medicalHistoryController.clear();
-    _selectedGender = null;
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('My Patients'),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        title: const Text('My Patients', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Patient Name',
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter patient name';
-                                }
-                                return null;
-                              },
+              : _patients.isEmpty
+                  ? const Center(child: Text('No patients found.'))
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _patients.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final patient = _patients[index];
+                        return Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Colors.blueAccent,
+                              child: Icon(Icons.person, color: Colors.white),
                             ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _emailController,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter email';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _phoneController,
-                              decoration: const InputDecoration(
-                                labelText: 'Phone',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.phone,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter phone number';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _ageController,
-                              decoration: const InputDecoration(
-                                labelText: 'Age',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter age';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            DropdownButtonFormField<String>(
-                              value: _selectedGender,
-                              decoration: const InputDecoration(
-                                labelText: 'Gender',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: const [
-                                DropdownMenuItem(value: 'male', child: Text('Male')),
-                                DropdownMenuItem(value: 'female', child: Text('Female')),
-                                DropdownMenuItem(value: 'other', child: Text('Other')),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedGender = value;
-                                });
-                              },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please select gender';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _medicalHistoryController,
-                              decoration: const InputDecoration(
-                                labelText: 'Medical History',
-                                border: OutlineInputBorder(),
-                              ),
-                              maxLines: 3,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter medical history';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _addPatient,
-                              child: const Text('Add Patient'),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Patient List',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _patients.length,
-                        itemBuilder: (context, index) {
-                          final patient = _patients[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            child: ListTile(
-                              title: Text(patient['name']),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Age: ${patient['age']}'),
-                                  Text('Last Visit: ${patient['lastVisit']}'),
-                                  if (patient['nextAppointment'] != null)
-                                    Text('Next Appointment: ${patient['nextAppointment']}'),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.medical_services),
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/doctor-patient-details',
-                                    arguments: patient['id'],
-                                  );
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                            title: Text(patient['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
+                            subtitle: Text(patient['email'] ?? '', style: const TextStyle(color: Colors.black54)),
+                            trailing: const Icon(Icons.arrow_forward_ios, size: 18, color: Colors.blueAccent),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DoctorPatientDetailScreen(patient: patient),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showLinkPatientDialog,
+        backgroundColor: Colors.blueAccent,
+        child: const Icon(Icons.add),
+        tooltip: 'Link New Patient',
+      ),
     );
   }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _ageController.dispose();
-    _medicalHistoryController.dispose();
-    super.dispose();
-  }
-} 
+}

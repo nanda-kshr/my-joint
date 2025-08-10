@@ -36,7 +36,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
       });
     }
@@ -51,7 +51,10 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: $e')),
+          SnackBar(
+            content: Text('Logout failed: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -60,37 +63,64 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(_userData?['name'] ?? 'Patient Dashboard'),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        title: Text(_userData?['name'] ?? 'Patient Dashboard', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+        iconTheme: const IconThemeData(color: Colors.black),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: Colors.black),
             onPressed: () {
               Navigator.pushNamed(context, '/settings');
             },
+            tooltip: 'Settings',
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
             onPressed: _logout,
+            tooltip: 'Logout',
           ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        _error!,
+                        style: TextStyle(color: Colors.red.shade700),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadUserData,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: ListTile(
                           leading: const CircleAvatar(
-                            child: Icon(Icons.person),
+                            backgroundColor: Colors.blueAccent,
+                            child: Icon(Icons.person, color: Colors.white),
                           ),
-                          title: Text(_userData?['name'] ?? 'Patient'),
-                          subtitle: Text(_userData?['email'] ?? ''),
+                          title: Text(_userData?['name'] ?? 'Patient', style: const TextStyle(fontWeight: FontWeight.w500)),
+                          subtitle: Text(_userData?['email'] ?? '', style: const TextStyle(color: Colors.black54)),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -103,39 +133,131 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                         children: [
                           _buildDashboardItem(
                             context,
-                            'Joint Assessment',
+                            'Complaints',
+                            Icons.note_add,
+                            Colors.blue,
+                            () => _showDataDialog(
+                              context,
+                              title: 'Complaints',
+                              fetcher: () => _apiService.getPatientComplaints(),
+                              itemBuilder: (item) => ListTile(
+                                title: Text(item['complaint'] ?? item['text'] ?? ''),
+                                subtitle: item['createdAt'] != null
+                                    ? Text('Added: ' + (item['createdAt'] ?? ''))
+                                    : null,
+                              ),
+                            ),
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            'Comorbidities',
                             Icons.medical_services,
-                            () => Navigator.pushNamed(context, '/joint-assessment'),
+                            Colors.orange,
+                            () => _showDataDialog(
+                              context,
+                              title: 'Comorbidities',
+                              fetcher: () => _apiService.getPatientComorbidities(),
+                              itemBuilder: (item) => ListTile(
+                                title: Text(item['text'] ?? ''),
+                                subtitle: item['createdAt'] != null
+                                    ? Text('Added: ' + (item['createdAt'] ?? ''))
+                                    : null,
+                              ),
+                            ),
                           ),
                           _buildDashboardItem(
                             context,
-                            'Diet Plan',
-                            Icons.restaurant,
-                            () => Navigator.pushNamed(context, '/diet'),
+                            'Disease Scores',
+                            Icons.analytics,
+                            Colors.green,
+                            () => _showDataDialog(
+                              context,
+                              title: 'Disease Scores',
+                              fetcher: () => _apiService.getPatientDiseaseScores(),
+                              itemBuilder: (item) => ListTile(
+                                title: Text('SDAI: ${item['SDAI'] ?? item['sdai'] ?? 'N/A'}'),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('DAS28-CRP: ${item['DAS_28_CRP'] ?? item['das_28_crp'] ?? 'N/A'}'),
+                                    if (item['createdAt'] != null)
+                                      Text('Date: ${item['createdAt']}'),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                           _buildDashboardItem(
                             context,
-                            'Exercise',
-                            Icons.fitness_center,
-                            () => Navigator.pushNamed(context, '/exercise'),
+                            'Medications',
+                            Icons.medication,
+                            Colors.purple,
+                            () => _showDataDialog(
+                              context,
+                              title: 'Medications',
+                              fetcher: () => _apiService.getPatientMedications(),
+                              itemBuilder: (item) {
+                                final meds = item['medications'] is List
+                                    ? item['medications']
+                                    : [];
+                                return ListTile(
+                                  title: Text(meds.isNotEmpty
+                                      ? meds.map((m) => m['name']).join(', ')
+                                      : 'No medications'),
+                                  subtitle: item['createdAt'] != null
+                                      ? Text('Added: ' + (item['createdAt'] ?? ''))
+                                      : null,
+                                );
+                              },
+                            ),
                           ),
                           _buildDashboardItem(
                             context,
-                            'Consult',
+                            'Investigations',
+                            Icons.science,
+                            Colors.teal,
+                            () => _showDataDialog(
+                              context,
+                              title: 'Investigations',
+                              fetcher: () => _apiService.getPatientInvestigations(),
+                              itemBuilder: (item) => ListTile(
+                                title: Text('Hb: ${item['Hb'] ?? 'N/A'}'),
+                                subtitle: item['createdAt'] != null
+                                    ? Text('Date: ${item['createdAt']}')
+                                    : null,
+                              ),
+                            ),
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            'Treatments',
+                            Icons.healing,
+                            Colors.indigo,
+                            () => _showDataDialog(
+                              context,
+                              title: 'Treatments',
+                              fetcher: () => _apiService.getPatientTreatments(),
+                              itemBuilder: (item) => ListTile(
+                                title: Text(item['treatment'] ?? ''),
+                                subtitle: item['createdAt'] != null
+                                    ? Text('Started: ' + (item['createdAt'] ?? ''))
+                                    : null,
+                              ),
+                            ),
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            'Referrals',
                             Icons.people,
-                            () => Navigator.pushNamed(context, '/consult'),
-                          ),
-                          _buildDashboardItem(
-                            context,
-                            'Reports',
-                            Icons.assessment,
-                            () => Navigator.pushNamed(context, '/reports'),
-                          ),
-                          _buildDashboardItem(
-                            context,
-                            'Profile',
-                            Icons.person,
-                            () => Navigator.pushNamed(context, '/profile'),
+                            Colors.red,
+                            () => _showDataDialog(
+                              context,
+                              title: 'Referrals',
+                              fetcher: () => _apiService.getPatientReferrals(),
+                              itemBuilder: (item) => ListTile(
+                                title: Text(item['text'] ?? ''),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -149,24 +271,91 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
     BuildContext context,
     String title,
     IconData icon,
+    Color color,
     VoidCallback onTap,
   ) {
     return Card(
+      elevation: 4,
       child: InkWell(
         onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 48, color: color),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  void _showDataDialog(BuildContext context, {
+    required String title,
+    required Future<List<dynamic>> Function() fetcher,
+    required Widget Function(dynamic item) itemBuilder,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return FutureBuilder<List<dynamic>>(
+          future: fetcher(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return AlertDialog(
+                title: Text(title),
+                content: const SizedBox(
+                  height: 80,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              );
+            } else if (snapshot.hasError) {
+              return AlertDialog(
+                title: Text(title),
+                content: Text('Error: ${snapshot.error}'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
+              );
+            } else {
+              final data = snapshot.data ?? [];
+              return AlertDialog(
+                title: Text(title),
+                content: data.isEmpty
+                    ? const Text('No data found.')
+                    : SizedBox(
+                        width: double.maxFinite,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: data.length,
+                          itemBuilder: (context, index) => itemBuilder(data[index]),
+                        ),
+                      ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
+                ],
+              );
+            }
+          },
+        );
+      },
     );
   }
 } 

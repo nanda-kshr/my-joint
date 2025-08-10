@@ -3,7 +3,8 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PatientComplaintsScreen extends StatefulWidget {
-  const PatientComplaintsScreen({super.key});
+  final int? patientUid;
+  const PatientComplaintsScreen({super.key, this.patientUid});
 
   @override
   State<PatientComplaintsScreen> createState() => _PatientComplaintsScreenState();
@@ -14,11 +15,10 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _complaints = [];
+  String? _userRole;
+  int? _uid;
   final _formKey = GlobalKey<FormState>();
-  final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
-  final _durationController = TextEditingController();
-  String _selectedSeverity = 'medium';
+  final _textController = TextEditingController();
 
   @override
   void initState() {
@@ -29,19 +29,22 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
   Future<void> _initializeApiService() async {
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
+    _userRole = await _apiService.getUserType();
+    _uid = widget.patientUid ?? int.tryParse(await _apiService.getUserId() ?? '');
     _loadComplaints();
   }
 
   Future<void> _loadComplaints() async {
+    setState(() { _isLoading = true; });
     try {
-      final complaints = await _apiService.getPatientComplaints();
+      final complaints = await _apiService.getPatientComplaints(uid: _uid);
       setState(() {
         _complaints = List<Map<String, dynamic>>.from(complaints);
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
       });
     }
@@ -49,190 +52,183 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
 
   Future<void> _addComplaint() async {
     if (!_formKey.currentState!.validate()) return;
-
+    
     try {
-      final complaintData = {
-        'description': _descriptionController.text,
-        'severity': _selectedSeverity,
-        'location': _locationController.text,
-        'duration': _durationController.text,
-      };
-
-      await _apiService.addPatientComplaint(complaintData);
-      _descriptionController.clear();
-      _locationController.clear();
-      _durationController.clear();
+      await _apiService.addPatientComplaint(uid: _uid, text: _textController.text);
+      _textController.clear();
+      Navigator.pop(context); // Close dialog
       _loadComplaints();
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Complaint added successfully')),
+          const SnackBar(
+            content: Text('Complaint added successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add complaint: $e')),
+          SnackBar(
+            content: Text('Failed to add complaint: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
   }
 
-  Future<void> _updateComplaintStatus(String complaintId, String status) async {
+  Future<void> _deleteComplaint(int id) async {
     try {
-      await _apiService.updatePatientComplaint(complaintId, status);
+      await _apiService.deletePatientComplaint(id: id);
       _loadComplaints();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Status updated successfully')),
+          const SnackBar(
+            content: Text('Complaint deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update status: $e')),
+          SnackBar(
+            content: Text('Failed to delete complaint: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Complaints'),
+        title: const Text('Complaints'),
       ),
+      floatingActionButton: _userRole == 'doctor'
+          ? FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Add Complaint'),
+                    content: Form(
+                      key: _formKey,
+                      child: TextFormField(
+                        controller: _textController,
+                        decoration: const InputDecoration(
+                          labelText: 'Complaint',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                        validator: (value) => value == null || value.isEmpty ? 'Enter a complaint' : null,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: _addComplaint,
+                        child: const Text('Add Complaint'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              tooltip: 'Add Complaint',
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            TextFormField(
-                              controller: _descriptionController,
-                              decoration: const InputDecoration(
-                                labelText: 'Description',
-                                border: OutlineInputBorder(),
-                              ),
-                              maxLines: 3,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a description';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _locationController,
-                              decoration: const InputDecoration(
-                                labelText: 'Location',
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter the location';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _durationController,
-                              decoration: const InputDecoration(
-                                labelText: 'Duration',
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter the duration';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            DropdownButtonFormField<String>(
-                              value: _selectedSeverity,
-                              decoration: const InputDecoration(
-                                labelText: 'Severity',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: const [
-                                DropdownMenuItem(value: 'low', child: Text('Low')),
-                                DropdownMenuItem(value: 'medium', child: Text('Medium')),
-                                DropdownMenuItem(value: 'high', child: Text('High')),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedSeverity = value!;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _addComplaint,
-                              child: const Text('Add Complaint'),
-                            ),
-                          ],
-                        ),
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        _error!,
+                        style: TextStyle(color: Colors.red.shade700),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _complaints.length,
-                        itemBuilder: (context, index) {
-                          final complaint = _complaints[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: ListTile(
-                              title: Text(complaint['description']),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Location: ${complaint['location']}'),
-                                  Text('Duration: ${complaint['duration']}'),
-                                  Text('Severity: ${complaint['severity']}'),
-                                  Text('Status: ${complaint['status']}'),
-                                ],
-                              ),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (status) =>
-                                    _updateComplaintStatus(complaint['id'], status),
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'active',
-                                    child: Text('Mark as Active'),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'resolved',
-                                    child: Text('Mark as Resolved'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadComplaints,
+                        child: const Text('Retry'),
                       ),
+                    ],
+                  ),
+                )
+              : _complaints.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.note_add, size: 64, color: Colors.grey.shade400),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No complaints found.',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _complaints.length,
+                      itemBuilder: (context, index) {
+                        final complaint = _complaints[index];
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: ListTile(
+                            title: Text(complaint['complaint'] ?? ''),
+                            subtitle: Text(
+                              'Added: ${complaint['createdAt'] != null ? DateTime.parse(complaint['createdAt']).toString().split('.')[0] : 'Unknown'}',
+                            ),
+                            trailing: _userRole == 'doctor'
+                                ? IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Delete Complaint'),
+                                          content: const Text('Are you sure you want to delete this complaint?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                _deleteComplaint(complaint['id']);
+                                              },
+                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                              child: const Text('Delete'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : null,
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
     );
-  }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _locationController.dispose();
-    _durationController.dispose();
-    super.dispose();
   }
 } 

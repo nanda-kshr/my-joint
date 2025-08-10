@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'doctor_patients_screen.dart';
+import 'doctor_patient_detail_screen.dart';
 
 class DoctorDashboardScreen extends StatefulWidget {
   const DoctorDashboardScreen({super.key});
@@ -31,7 +33,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   Future<void> _loadData() async {
     try {
       final userData = await _apiService.getDoctorProfile();
-      final patients = await _apiService.getPatients();
+      final userId = await _apiService.getUserId();
+      final patients = await _apiService.getDoctorPatients(int.parse(userId ?? '0'));
       setState(() {
         _userData = userData;
         _patients = patients;
@@ -39,7 +42,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
       });
     }
@@ -54,7 +57,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: $e')),
+          SnackBar(
+            content: Text('Logout failed: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -65,6 +71,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_userData?['name'] ?? 'Doctor Dashboard'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -81,7 +88,25 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        _error!,
+                        style: TextStyle(color: Colors.red.shade700),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadData,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
               : Column(
                   children: [
                     Card(
@@ -94,34 +119,77 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         subtitle: Text(_userData?['email'] ?? ''),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Icon(Icons.people, color: Colors.blue.shade600),
+                          const SizedBox(width: 8),
+                          Text(
+                            'My Patients (${_patients.length})',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _patients.length,
-                        itemBuilder: (context, index) {
-                          final patient = _patients[index];
-                          return Card(
-                            child: ListTile(
-                              leading: const CircleAvatar(
-                                child: Icon(Icons.person),
+                      child: _patients.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No patients assigned yet.',
+                                    style: TextStyle(color: Colors.grey.shade600),
+                                  ),
+                                ],
                               ),
-                              title: Text(patient['name'] ?? 'Unknown'),
-                              subtitle: Text(patient['email'] ?? ''),
-                              trailing: const Icon(Icons.arrow_forward_ios),
-                              onTap: () {
-                                // TODO: Navigate to patient details
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _patients.length,
+                              itemBuilder: (context, index) {
+                                final patient = _patients[index];
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  child: ListTile(
+                                    leading: const CircleAvatar(
+                                      child: Icon(Icons.person),
+                                    ),
+                                    title: Text(patient['name'] ?? 'Unknown'),
+                                    subtitle: Text(patient['email'] ?? ''),
+                                    trailing: const Icon(Icons.arrow_forward_ios),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => DoctorPatientDetailScreen(patient: patient),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
                               },
                             ),
-                          );
-                        },
-                      ),
                     ),
                   ],
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Add new patient
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const DoctorPatientsScreen(),
+            ),
+          );
         },
+        tooltip: 'Manage Patients',
         child: const Icon(Icons.add),
       ),
     );
