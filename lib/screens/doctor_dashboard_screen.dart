@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'doctor_patients_screen.dart';
 import 'doctor_patient_detail_screen.dart';
 
@@ -17,6 +18,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   bool _isLoading = true;
   String? _error;
   Map<String, dynamic>? _userData;
+  List<dynamic> _notifications = [];
 
   @override
   void initState() {
@@ -28,6 +30,23 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
     await _loadData();
+    await _fetchNotifications();
+  }
+
+  Future<void> _fetchNotifications() async {
+    try {
+      final userId = await _apiService.getUserId();
+      if (userId == null) return;
+      final response = await _apiService.getAuthenticated('${ApiService.baseUrl}/doctor/notifications?doctor_id=$userId');
+      if (response.statusCode == 200) {
+        final data = response.body.isNotEmpty ? Map<String, dynamic>.from(jsonDecode(response.body)) : {};
+        setState(() {
+          _notifications = data['notifications'] ?? [];
+        });
+      }
+    } catch (e) {
+      // Optionally handle error
+    }
   }
 
   Future<void> _loadData() async {
@@ -45,6 +64,24 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         _error = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _updateNotificationStatus(int notificationId, String status) async {
+    try {
+      final response = await _apiService.updateNotificationStatus(notificationId, status);
+      if (response.statusCode == 200) {
+        await _fetchNotifications();
+        setState(() {});
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update notification status')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
@@ -156,6 +193,35 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                               itemCount: _patients.length,
                               itemBuilder: (context, index) {
                                 final patient = _patients[index];
+                                // Find notification for this patient
+                                final notification = _notifications.firstWhere(
+                                  (n) => n['patient_id'] == patient['uid'],
+                                  orElse: () => null,
+                                );
+                                Widget? statusWidget;
+                                if (notification != null) {
+                                  if (notification['status'] == 'pending') {
+                                    statusWidget = Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.check_circle, color: Colors.green),
+                                          tooltip: 'Accept',
+                                          onPressed: () => _updateNotificationStatus(notification['id'], 'accepted'),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.cancel, color: Colors.red),
+                                          tooltip: 'Reject',
+                                          onPressed: () => _updateNotificationStatus(notification['id'], 'rejected'),
+                                        ),
+                                      ],
+                                    );
+                                  } else if (notification['status'] == 'accepted') {
+                                    statusWidget = const Icon(Icons.check_circle, color: Colors.green);
+                                  } else if (notification['status'] == 'rejected') {
+                                    statusWidget = const Icon(Icons.cancel, color: Colors.red);
+                                  }
+                                }
                                 return Card(
                                   margin: const EdgeInsets.only(bottom: 8),
                                   child: ListTile(
@@ -164,7 +230,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                     ),
                                     title: Text(patient['name'] ?? 'Unknown'),
                                     subtitle: Text(patient['email'] ?? ''),
-                                    trailing: const Icon(Icons.arrow_forward_ios),
+                                    trailing: statusWidget ?? const Icon(Icons.arrow_forward_ios),
                                     onTap: () {
                                       Navigator.push(
                                         context,

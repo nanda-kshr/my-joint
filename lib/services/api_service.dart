@@ -1,8 +1,50 @@
+// import 'dart:io' as io;
+
+// ...existing code...
+
+// Inside ApiService class (move this method below the class declaration)
+// Update notification status (accept/reject)
+// Future<http.Response> updateNotificationStatus(int notificationId, String status) async {
+//   final url = Uri.parse('$baseUrl/doctor/notifications/$notificationId');
+//   final headers = await _authHeaders();
+//   return await _client.put(
+//     url,
+//     headers: headers,
+//     body: jsonEncode({'status': status}),
+//   );
+// }
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart' show kIsWeb;
+// import 'dart:io' as io;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'dart:developer' as developer;
+// Get all doctors
+Future<List<dynamic>> getAllDoctors(ApiService api) async {
+  final response = await api._client.get(Uri.parse('${ApiService.baseUrl}/doctor/patient'));
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Failed to fetch doctors');
+  }
+}
+
+// Request consultation
+Future<void> requestConsultation(ApiService api, {required int patientId, required int doctorId}) async {
+  final headers = await api._authHeaders();
+  final response = await api._client.post(
+    Uri.parse('${ApiService.baseUrl}/doctor/consult-request'),
+    headers: headers,
+    body: jsonEncode({
+      'patient_id': patientId,
+      'doctor_id': doctorId,
+    }),
+  );
+  if (response.statusCode != 200) {
+    throw Exception('Failed to send consultation request');
+  }
+}
 
 class ApiService {
   static const String baseUrl = 'http://localhost:3000/api';
@@ -14,6 +56,80 @@ class ApiService {
   final SharedPreferences _prefs;
 
   ApiService(this._prefs);
+
+  // Public authenticated GET request
+  Future<http.Response> getAuthenticated(String url) async {
+    return await _client.get(
+      Uri.parse(url),
+      headers: await _authHeaders(),
+    );
+  }
+
+  // Update notification status (accept/reject)
+  Future<http.Response> updateNotificationStatus(int notificationId, String status) async {
+    final url = Uri.parse('$baseUrl/doctor/notifications/update');
+    final headers = await _authHeaders();
+    return await _client.put(
+      url,
+      headers: headers,
+      body: jsonEncode({
+        'id': notificationId,
+        'status': status
+      }),
+    );
+  }
+
+    // Health Records APIs
+  Future<List<dynamic>> getPatientFiles({required int patientId}) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/patient/files?patient_id=$patientId'),
+      headers: await _authHeaders(),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['files'] ?? [];
+    } else {
+      throw Exception('Failed to fetch patient files');
+    }
+  }
+
+  Future<String> uploadPatientFile({required int patientId, required String filePath, required String fileName}) async {
+    if (kIsWeb) {
+      throw Exception('File upload is not supported on web.');
+    }
+    final uri = Uri.parse('$baseUrl/patient/upload');
+    final request = http.MultipartRequest('POST', uri);
+    request.headers.addAll(await _authHeaders(multipart: true));
+    request.fields['patient_id'] = patientId.toString();
+    request.files.add(await http.MultipartFile.fromPath('file', filePath, filename: fileName));
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['filename'] ?? '';
+    } else {
+      throw Exception('Failed to upload file');
+    }
+  }
+
+  Future<http.Response> downloadPatientFile({required String storedFilename}) async {
+    final uri = Uri.parse('$baseUrl/patient/download?filename=$storedFilename');
+    final response = await _client.get(uri, headers: await _authHeaders());
+    if (response.statusCode == 200) {
+      return response;
+    } else {
+      throw Exception('Failed to download file');
+    }
+  }
+
+  Future<Map<String, String>> _authHeaders({bool multipart = false}) async {
+    final token = await getToken();
+    return {
+      if (!multipart) 'Content-Type': 'application/json',
+      if (multipart) 'Content-Type': 'multipart/form-data',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
+  }
 
   // Token Management
   Future<String?> getToken() async {

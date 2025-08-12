@@ -636,50 +636,332 @@
 						}
 					},
 					"response": []
-				}
+				},
+						{
+							"name": "Upload Patient File",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "multipart/form-data"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "<path-to-your-file>"
+										},
+										{
+											"key": "patient_id",
+											"type": "text",
+											"value": "1"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/patient/upload",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "patient", "upload"]
+								}
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "multipart/form-data"
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"type": "file",
+													"src": "<path-to-your-file>"
+												},
+												{
+													"key": "patient_id",
+													"type": "text",
+													"value": "1"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/patient/upload",
+											"host": ["{{baseUrl}}"],
+											"path": ["api", "patient", "upload"]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"message\": \"File uploaded\",\n    \"filename\": \"1689351234567_abc123.pdf\"\n}"
+								}
+							]
+						},
+						{
+							"name": "List Patient Files",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/patient/files?patient_id=1",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "patient", "files"],
+									"query": [
+										{ "key": "patient_id", "value": "1" }
+									]
+								}
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{ "key": "Content-Type", "value": "application/json" }
+									],
+									"body": "{\n  \"files\": [\n    {\n      \"id\": 1,\n      \"original_filename\": \"report.pdf\",\n      \"stored_filename\": \"1689351234567_report.pdf\",\n      \"uploaded_at\": \"2025-08-13T12:00:00.000Z\"\n    }\n  ]\n}"
+								}
+							]
+						},
+								{
+									"name": "Download Patient File",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/patient/download?filename=1689351234567_report.pdf",
+											"host": ["{{baseUrl}}"],
+											"path": ["api", "patient", "download"],
+											"query": [
+												{ "key": "filename", "value": "1689351234567_report.pdf" }
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "Success",
+											"originalRequest": {},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "octet-stream",
+											"header": [
+												{ "key": "Content-Type", "value": "application/octet-stream" },
+												{ "key": "Content-Disposition", "value": "attachment; filename=\"1689351234567_report.pdf\"" }
+											],
+											"body": "<binary file>"
+										}
+									]
+								},
+								{
+									"name": "List Assigned Doctors",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/patient/doctors?patient_id=1",
+											"host": ["{{baseUrl}}"],
+											"path": ["api", "patient", "doctors"],
+											"query": [
+												{ "key": "patient_id", "value": "1" }
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "Success",
+											"originalRequest": {},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{ "key": "Content-Type", "value": "application/json" }
+											],
+											"body": "{\n  \"doctors\": [\n    {\n      \"did\": 1,\n      \"name\": \"Dr. Emily Carter\",\n      \"email\": \"emily.carter@hospital.com\",\n      \"phone\": 9111223344,\n      \"address\": \"101 Elm St, Medcity\",\n      \"specialization\": \"Rheumatology\"\n    }\n  ]\n}"
+										},
+										{
+											"name": "No Doctors",
+											"originalRequest": {},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{ "key": "Content-Type", "value": "application/json" }
+											],
+											"body": "{\n  \"message\": \"No assigned doctors found\",\n  \"doctors\": []\n}"
+										}
+									]
+								}
 			]
 		},
-		{
-			"name": "Test",
-			"item": [
-				{
-					"name": "Test Auth",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/test-auth",
-							"host": [
-								"{{baseUrl}}"
+			{
+				"name": "Doctor Notifications",
+				"item": [
+					{
+						"name": "Request Consultation (Patient)",
+						"request": {
+							"method": "POST",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
 							],
-							"path": [
-								"api",
-								"test-auth"
-							]
-						}
+							"body": {
+								"mode": "raw",
+								"raw": "{\n  \"patient_id\": 2,\n  \"doctor_id\": 1\n}"
+							},
+							"url": {
+								"raw": "{{baseUrl}}/api/doctor/consult-request",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "doctor", "consult-request"]
+							}
+						},
+						"response": [
+							{
+								"name": "Success",
+								"originalRequest": {},
+								"status": "OK",
+								"code": 200,
+								"_postman_previewlanguage": "json",
+								"header": [
+									{ "key": "Content-Type", "value": "application/json" }
+								],
+								"body": "{\n  \"message\": \"Consultation request sent.\"\n}"
+							}
+						]
 					},
-					"response": []
-				},
-				{
-					"name": "Test JWT",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/test-jwt",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"test-jwt"
-							]
-						}
+							{
+								"name": "Get Doctor Notifications",
+								"request": {
+									"method": "GET",
+									"header": [],
+									"url": {
+										"raw": "{{baseUrl}}/api/doctor/notifications?doctor_id=1",
+										"host": ["{{baseUrl}}"],
+										"path": ["api", "doctor", "notifications"],
+										"query": [
+											{ "key": "doctor_id", "value": "1" }
+										]
+									}
+								},
+								"response": [
+									{
+										"name": "Success",
+										"originalRequest": {},
+										"status": "OK",
+										"code": 200,
+										"_postman_previewlanguage": "json",
+										"header": [
+											{ "key": "Content-Type", "value": "application/json" }
+										],
+										"body": "{\n  \"notifications\": [\n    {\n      \"id\": 1,\n      \"doctor_id\": 1,\n      \"patient_id\": 2,\n      \"status\": \"pending\",\n      \"created_at\": \"2025-08-13T12:00:00.000Z\"\n    }\n  ]\n}"
+									}
+								]
+							},
+							{
+								"name": "Update Notification Status",
+								"request": {
+									"method": "PATCH",
+									"header": [
+										{ "key": "Content-Type", "value": "application/json" }
+									],
+									"body": {
+										"mode": "raw",
+										"raw": "{\n  \"id\": 1,\n  \"status\": \"accepted\"\n}"
+									},
+									"url": {
+										"raw": "{{baseUrl}}/api/doctor/notifications/update",
+										"host": ["{{baseUrl}}"],
+										"path": ["api", "doctor", "notifications", "update"]
+									}
+								},
+								"response": [
+									{
+										"name": "Success",
+										"originalRequest": {},
+										"status": "OK",
+										"code": 200,
+										"_postman_previewlanguage": "json",
+										"header": [
+											{ "key": "Content-Type", "value": "application/json" }
+										],
+										"body": "{\n  \"message\": \"Notification status updated\",\n  \"id\": 1,\n  \"status\": \"accepted\"\n}"
+									},
+									{
+										"name": "Not Found",
+										"originalRequest": {},
+										"status": "Not Found",
+										"code": 404,
+										"_postman_previewlanguage": "json",
+										"header": [
+											{ "key": "Content-Type", "value": "application/json" }
+										],
+										"body": "{\n  \"error\": \"Notification not found or not updated\"\n}"
+									}
+								]
+							}
+				]
+			},
+			{
+				"name": "Test",
+				"item": [
+					{
+						"name": "Test Auth",
+						"request": {
+							"method": "GET",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/test-auth",
+								"host": [
+									"{{baseUrl}}"
+								],
+								"path": [
+									"api",
+									"test-auth"
+								]
+							}
+						},
+						"response": []
 					},
-					"response": []
-				}
-			]
-		}
+					{
+						"name": "Test JWT",
+						"request": {
+							"method": "GET",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/test-jwt",
+								"host": [
+									"{{baseUrl}}"
+								],
+								"path": [
+									"api",
+									"test-jwt"
+								]
+							}
+						},
+						"response": []
+					}
+				]
+			}
 	],
 	"variable": [
 		{

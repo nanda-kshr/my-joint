@@ -118,9 +118,27 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
                           elevation: 2,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           child: ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.blueAccent,
-                              child: Icon(Icons.person, color: Colors.white),
+                            leading: Stack(
+                              children: [
+                                const CircleAvatar(
+                                  backgroundColor: Colors.blueAccent,
+                                  child: Icon(Icons.person, color: Colors.white),
+                                ),
+                                if ((patient['consult_status'] ?? '') == 'pending' || patient['hasConsultRequest'] == true)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                      width: 14,
+                                      height: 14,
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white, width: 2),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                             title: Text(patient['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w500)),
                             subtitle: Text(patient['email'] ?? '', style: const TextStyle(color: Colors.black54)),

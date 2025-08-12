@@ -8,6 +8,12 @@ import 'patient_medications_screen.dart';
 import 'patient_investigations_screen.dart';
 import 'patient_treatments_screen.dart';
 
+import 'temp_screen.dart';
+import 'consult_now_screen.dart';
+import 'health_records_screen.dart';
+import 'diet_screen.dart';
+import 'exercise_screen.dart';
+
 class PatientDashboardScreen extends StatefulWidget {
   const PatientDashboardScreen({super.key});
 
@@ -206,6 +212,55 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => PatientTreatmentsScreen(patientUid: _userData?['uid']),
+                              ),
+                            ),
+                          ),
+                          // New cards
+                          _buildDashboardItem(
+                            context,
+                            'Diet',
+                            Icons.restaurant,
+                            Colors.redAccent,
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DietScreen(),
+                              ),
+                            ),
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            'Exercises',
+                            Icons.fitness_center,
+                            Colors.lightGreen,
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ExerciseScreen(),
+                              ),
+                            ),
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            'Health Records',
+                            Icons.note,
+                            Colors.deepOrange,
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HealthRecordsScreen(patientUid: _userData?['uid']),
+                              ),
+                            ),
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            'Consult Now',
+                            Icons.support_agent,
+                            Colors.cyan,
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ConsultNowScreen(),
                               ),
                             ),
                           ),
