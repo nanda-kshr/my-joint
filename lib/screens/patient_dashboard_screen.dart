@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'patient_complaints_screen.dart';
 import 'patient_comorbidities_screen.dart';
-import 'patient_disease_scores_screen.dart';
+// ...existing code...
 import 'patient_medications_screen.dart';
 import 'patient_investigations_screen.dart';
 import 'patient_treatments_screen.dart';
@@ -13,13 +14,17 @@ import 'consult_now_screen.dart';
 import 'health_records_screen.dart';
 import 'diet_screen.dart';
 import 'exercise_screen.dart';
+import 'patient_daily_assessment_screen.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
   const PatientDashboardScreen({super.key});
 
   @override
   State<PatientDashboardScreen> createState() => _PatientDashboardScreenState();
+
 }
+
+// ...existing code...
 
 class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
   late ApiService _apiService;
@@ -169,16 +174,24 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                           ),
                           _buildDashboardItem(
                             context,
-                            'Disease Scores',
-                            Icons.analytics,
-                            Colors.green,
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PatientDiseaseScoresScreen(patientUid: _userData?['uid']),
-                              ),
-                            ),
+                            'Daily Assessment',
+                            Icons.assessment,
+                            Colors.deepPurple,
+                            () {
+                              if (_userData?['uid'] != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => PatientDailyAssessmentScreen(patientUid: _userData!['uid']),
+                                  ),
+                                );
+                              }
+                            },
                           ),
+
+
+
+// ...existing code...
                           _buildDashboardItem(
                             context,
                             'Medications',
@@ -307,5 +320,88 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
     );
   }
 
-// ...existing code...
+
+}
+
+// Simple line chart painter for pain scores
+class PainChartPainter extends CustomPainter {
+  final List<Map<String, dynamic>> scores;
+  PainChartPainter(this.scores);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.deepPurple
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    if (scores.isEmpty) return;
+    final maxScore = 10.0;
+    final minScore = 0.0;
+  final leftPadding = 48.0;
+  final bottomPadding = 32.0;
+    final chartWidth = size.width - leftPadding;
+    final chartHeight = size.height - bottomPadding;
+
+    // Draw axes
+    final axisPaint = Paint()
+      ..color = Colors.grey
+      ..strokeWidth = 1.5;
+    // Y axis
+    canvas.drawLine(Offset(leftPadding, 0), Offset(leftPadding, chartHeight), axisPaint);
+    // X axis
+    canvas.drawLine(Offset(leftPadding, chartHeight), Offset(leftPadding + chartWidth, chartHeight), axisPaint);
+
+  // Y axis labels (0, 5, 10) - move inside chart area and increase font size
+  final labelFontSize = 16.0;
+  final labelPadding = 8.0;
+  final textPainter0 = _textPainter('0', fontSize: labelFontSize);
+  textPainter0.paint(canvas, Offset(labelPadding, chartHeight - textPainter0.height / 2));
+  final textPainter5 = _textPainter('5', fontSize: labelFontSize);
+  textPainter5.paint(canvas, Offset(labelPadding, chartHeight / 2 - textPainter5.height / 2));
+  final textPainter10 = _textPainter('10', fontSize: labelFontSize);
+  textPainter10.paint(canvas, Offset(labelPadding, -textPainter10.height / 2));
+
+    // Prepare points (last date to right)
+    final points = <Offset>[];
+    for (int i = 0; i < scores.length; i++) {
+      final x = leftPadding + chartWidth * i / (scores.length - 1);
+      final y = chartHeight - ((scores[i]['pain_score'] - minScore) / (maxScore - minScore)) * chartHeight;
+      points.add(Offset(x, y));
+    }
+    if (points.length > 1) {
+      for (int i = 0; i < points.length - 1; i++) {
+        canvas.drawLine(points[i], points[i + 1], paint);
+      }
+    }
+
+    // Draw date labels on x-axis (increase font size, move up if clipped)
+    for (int i = 0; i < scores.length; i++) {
+      final dateStr = _formatDate(scores[i]['recorded_at']);
+      final tp = _textPainter(dateStr, fontSize: 14);
+      final x = leftPadding + chartWidth * i / (scores.length - 1) - tp.width / 2;
+      final y = chartHeight + labelPadding;
+      tp.paint(canvas, Offset(x, y));
+    }
+  }
+
+  TextPainter _textPainter(String text, {double fontSize = 12}) {
+    final tp = TextPainter(
+      text: TextSpan(text: text, style: TextStyle(color: Colors.black, fontSize: fontSize)),
+      textDirection: TextDirection.ltr,
+    );
+    tp.layout();
+    return tp;
+  }
+
+  String _formatDate(String isoDate) {
+    try {
+      final dt = DateTime.parse(isoDate);
+      return '${dt.day}/${dt.month}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

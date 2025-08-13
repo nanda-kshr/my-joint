@@ -31,7 +31,7 @@ Future<List<dynamic>> getAllDoctors(ApiService api) async {
 }
 
 // Request consultation
-Future<void> requestConsultation(ApiService api, {required int patientId, required int doctorId}) async {
+Future<void> requestConsultation(ApiService api, {required int patientId, required int doctorId, required String message}) async {
   final headers = await api._authHeaders();
   final response = await api._client.post(
     Uri.parse('${ApiService.baseUrl}/doctor/consult-request'),
@@ -39,6 +39,7 @@ Future<void> requestConsultation(ApiService api, {required int patientId, requir
     body: jsonEncode({
       'patient_id': patientId,
       'doctor_id': doctorId,
+      'message': message,
     }),
   );
   if (response.statusCode != 200) {
@@ -47,7 +48,27 @@ Future<void> requestConsultation(ApiService api, {required int patientId, requir
 }
 
 class ApiService {
-  static const String baseUrl = 'https://my-joints-backend.vercel.app/api';
+  // Pain Assessment APIs
+  Future<void> savePainAssessment({required int patientId, required int painScore}) async {
+    final response = await _request('POST', '/patient/pain-assessment', body: {
+      'patient_id': patientId,
+      'pain_score': painScore,
+    });
+    if (response.statusCode != 200) {
+      throw Exception('Failed to save pain assessment');
+    }
+  }
+
+  Future<List<dynamic>> getPainAssessments({required int patientId}) async {
+    final response = await _request('GET', '/patient/pain-assessment?patient_id=$patientId');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['scores'] ?? [];
+    } else {
+      throw Exception('Failed to fetch pain assessments');
+    }
+  }
+  static const String baseUrl = 'http://localhost:3000/api';
   static const String tokenKey = 'auth_token';
   static const String userTypeKey = 'user_type';
   static const String userIdKey = 'user_id';

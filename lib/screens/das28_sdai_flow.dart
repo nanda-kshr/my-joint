@@ -150,7 +150,7 @@ class _Das28SdaiFlowScreenState extends State<Das28SdaiFlowScreen> {
       appBar: AppBar(
         backgroundColor: _primaryColor,
         elevation: 0,
-        title: const Text('Disease Activity Flow', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Disease Activity Score', style: TextStyle(fontWeight: FontWeight.bold)),
         leading: step > 0
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),

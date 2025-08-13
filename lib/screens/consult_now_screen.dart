@@ -56,7 +56,12 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
   Future<void> _consultDoctor(int doctorId) async {
     if (_patientId == null) return;
     try {
-      await requestConsultation(_apiService, patientId: _patientId!, doctorId: doctorId);
+      await requestConsultation(
+        _apiService,
+        patientId: _patientId!,
+        doctorId: doctorId,
+        message: _complaint.trim(),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Consultation request sent!')),
       );
@@ -67,6 +72,10 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
     }
   }
 
+  int? _selectedDoctorId;
+  String _complaint = '';
+  bool _sending = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,23 +84,67 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _doctors.isEmpty
               ? const Center(child: Text('No doctors found.'))
-              : ListView.builder(
-                  itemCount: _doctors.length,
-                  itemBuilder: (context, index) {
-                    final doctor = _doctors[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.person, color: Colors.blue),
-                        title: Text(doctor['name'] ?? 'Doctor'),
-                        subtitle: Text(doctor['specialization'] ?? ''),
-                        trailing: ElevatedButton(
-                          onPressed: () => _consultDoctor(doctor['did'] ?? doctor['id']),
-                          child: const Text('Consult Now'),
+              : Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _doctors.length,
+                        itemBuilder: (context, index) {
+                          final doctor = _doctors[index];
+                          final doctorId = doctor['did'] ?? doctor['id'];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: ListTile(
+                              leading: const Icon(Icons.person, color: Colors.blue),
+                              title: Text(doctor['name'] ?? 'Doctor'),
+                              subtitle: Text(doctor['specialization'] ?? ''),
+                              trailing: Radio<int>(
+                                value: doctorId,
+                                groupValue: _selectedDoctorId,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedDoctorId = val;
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    if (_selectedDoctorId != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Describe your complaint',
+                            border: OutlineInputBorder(),
+                          ),
+                          minLines: 2,
+                          maxLines: 4,
+                          onChanged: (val) => setState(() => _complaint = val),
                         ),
                       ),
-                    );
-                  },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _sending || _complaint.trim().isEmpty
+                                ? null
+                                : () async {
+                                    setState(() => _sending = true);
+                                    await _consultDoctor(_selectedDoctorId!);
+                                    setState(() => _sending = false);
+                                  },
+                            child: _sending
+                                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Text('Send'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
     );
   }

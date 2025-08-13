@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'doctor_patients_screen.dart';
 import 'doctor_patient_detail_screen.dart';
+import 'doctor_message_screen.dart';
 
 class DoctorDashboardScreen extends StatefulWidget {
   const DoctorDashboardScreen({super.key});
@@ -205,14 +206,24 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.check_circle, color: Colors.green),
-                                          tooltip: 'Accept',
-                                          onPressed: () => _updateNotificationStatus(notification['id'], 'accepted'),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.cancel, color: Colors.red),
-                                          tooltip: 'Reject',
-                                          onPressed: () => _updateNotificationStatus(notification['id'], 'rejected'),
+                                          icon: const Icon(Icons.message, color: Colors.blue),
+                                          tooltip: 'View Message',
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (ctx) => DoctorMessageScreen(
+                                                complaint: notification['message'] ?? 'No complaint provided.',
+                                                onApprove: () {
+                                                  Navigator.of(ctx).pop();
+                                                  _updateNotificationStatus(notification['id'], 'accepted');
+                                                },
+                                                onReject: () {
+                                                  Navigator.of(ctx).pop();
+                                                  _updateNotificationStatus(notification['id'], 'rejected');
+                                                },
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ],
                                     );

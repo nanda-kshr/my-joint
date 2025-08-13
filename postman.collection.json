@@ -637,6 +637,65 @@
 					},
 					"response": []
 				},
+				{
+					"name": "Save Pain Assessment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"patient_id\": 1,\n  \"pain_score\": 7\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/patient/pain-assessment",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "patient", "pain-assessment"]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{ "key": "Content-Type", "value": "application/json" }
+							],
+							"body": "{\n  \"message\": \"Pain score recorded\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Pain Assessment (Last 10)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/patient/pain-assessment?patient_id=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "patient", "pain-assessment"],
+							"query": [
+								{ "key": "patient_id", "value": "1" }
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{ "key": "Content-Type", "value": "application/json" }
+							],
+							"body": "{\n  \"scores\": [\n    {\n      \"pain_score\": 7,\n      \"recorded_at\": \"2025-08-14T09:00:00.000Z\"\n    },\n    {\n      \"pain_score\": 5,\n      \"recorded_at\": \"2025-08-13T09:00:00.000Z\"\n    }\n  ]\n}"
+						}
+					]
+				},
 						{
 							"name": "Upload Patient File",
 							"request": {
@@ -825,10 +884,10 @@
 									"value": "application/json"
 								}
 							],
-							"body": {
-								"mode": "raw",
-								"raw": "{\n  \"patient_id\": 2,\n  \"doctor_id\": 1\n}"
-							},
+											"body": {
+												"mode": "raw",
+												"raw": "{\n  \"patient_id\": 2,\n  \"doctor_id\": 1,\n  \"message\": \"Please review my latest test results.\"\n}"
+											},
 							"url": {
 								"raw": "{{baseUrl}}/api/doctor/consult-request",
 								"host": ["{{baseUrl}}"],
@@ -873,14 +932,14 @@
 										"header": [
 											{ "key": "Content-Type", "value": "application/json" }
 										],
-										"body": "{\n  \"notifications\": [\n    {\n      \"id\": 1,\n      \"doctor_id\": 1,\n      \"patient_id\": 2,\n      \"status\": \"pending\",\n      \"created_at\": \"2025-08-13T12:00:00.000Z\"\n    }\n  ]\n}"
+										"body": "{\n  \"notifications\": [\n    {\n      \"id\": 1,\n      \"doctor_id\": 1,\n      \"patient_id\": 2,\n      \"status\": \"pending\",\n      \"message\": \"Please review my latest test results.\",\n      \"created_at\": \"2025-08-13T12:00:00.000Z\"\n    }\n  ]\n}"
 									}
 								]
 							},
 							{
 								"name": "Update Notification Status",
 								"request": {
-									"method": "PATCH",
+									"method": "PUT",
 									"header": [
 										{ "key": "Content-Type", "value": "application/json" }
 									],
