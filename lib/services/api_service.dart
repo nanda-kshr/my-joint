@@ -47,7 +47,7 @@ Future<void> requestConsultation(ApiService api, {required int patientId, requir
 }
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'https://my-joints-backend.vercel.app/api';
   static const String tokenKey = 'auth_token';
   static const String userTypeKey = 'user_type';
   static const String userIdKey = 'user_id';
