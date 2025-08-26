@@ -65,6 +65,12 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> with TickerProv
     
     _fadeController.forward();
     _slideController.forward();
+    // Prefill default credentials in login mode (useful for development/testing)
+    // NOTE: This only applies when not in registration mode.
+    if (!widget.isRegister) {
+      _emailController.text = 'nandakishorep2121@gmail.com';
+      _passwordController.text = 'Admin@123';
+    }
   }
 
   @override

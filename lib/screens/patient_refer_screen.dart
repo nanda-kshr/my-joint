@@ -19,11 +19,20 @@ class _PatientReferScreenState extends State<PatientReferScreen> {
   int? _uid;
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _initializeApiService();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -80,7 +89,7 @@ class _PatientReferScreenState extends State<PatientReferScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Referrals'),
+        title: Text(_selectedLanguage == 'en' ? 'Referrals' : 'ரெஃபரல்கள்'),
       ),
       floatingActionButton: _userRole == 'doctor'
           ? FloatingActionButton(
@@ -123,11 +132,11 @@ class _PatientReferScreenState extends State<PatientReferScreen> {
             )
           : null,
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _referrals.isEmpty
-                  ? const Center(child: Text('No referrals found.'))
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+        ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
+        : _referrals.isEmpty
+          ? Center(child: Text(_selectedLanguage == 'en' ? 'No referrals found.' : 'ரெஃபரல்கள் இல்லை.'))
                   : ListView.builder(
                       itemCount: _referrals.length,
                       itemBuilder: (context, index) {

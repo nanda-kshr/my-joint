@@ -16,11 +16,20 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   bool _isLoading = true;
   String? _error;
   List<dynamic> _data = [];
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _initializeApiService();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -543,7 +552,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${widget.type} History',
+              _selectedLanguage == 'en' ? '${widget.type} History' : '${widget.type} வரலாறு',
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 18,
@@ -551,7 +560,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               ),
             ),
             Text(
-              'Patient ID: ${widget.uid}',
+              _selectedLanguage == 'en' ? 'Patient ID: ${widget.uid}' : 'ரோகி ID: ${widget.uid}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade600,
@@ -586,14 +595,14 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
         ),
         child: FloatingActionButton(
           onPressed: () => _showCreateDialog(context),
-          tooltip: 'Add New ${widget.type}',
+    tooltip: _selectedLanguage == 'en' ? 'Add New ${widget.type}' : 'புதிதாகச் சேர்க்கவும் ${widget.type}',
           backgroundColor: Colors.transparent,
           elevation: 0,
           child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
       body: _isLoading
-          ? const Center(
+                  ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -601,9 +610,9 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                     strokeWidth: 3,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    'Loading data...',
+                    _selectedLanguage == 'en' ? 'Loading data...' : 'தகவல் ஏற்றுகிறது...',
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: 14,
@@ -645,7 +654,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Something went wrong',
+                          _selectedLanguage == 'en' ? 'Something went wrong' : 'ஏதோ தவறு நடந்தது',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -679,9 +688,9 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              'Try Again',
-                              style: TextStyle(
+                            child: Text(
+                              _selectedLanguage == 'en' ? 'Try Again' : 'மீண்டும் முயற்சிக்கவும்',
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),

@@ -19,11 +19,20 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
   int? _uid;
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _initializeApiService();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -90,7 +99,7 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
               : _medications.isEmpty
-                  ? const Center(child: Text('No medications found.'))
+                  ? Center(child: Text(_selectedLanguage == 'en' ? 'No medications found.' : 'மருந்துகள் இல்லை.'))
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -110,7 +119,7 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
                                   children: [
                                     const Icon(Icons.medication, color: Colors.blueAccent),
                                     const SizedBox(width: 8),
-                                    Text('Prescription', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.blueAccent)),
+                                    Text(_selectedLanguage == 'en' ? 'Prescription' : 'மருந்து பரிந்துரை', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.blueAccent)),
                                     const Spacer(),
                                     if (c['createdAt'] != null)
                                       Text(
@@ -137,7 +146,7 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
                                         ),
                                       )),
                                 if (meds.isEmpty)
-                                  const Text('No medications', style: TextStyle(color: Colors.grey)),
+                                  Text(_selectedLanguage == 'en' ? 'No medications' : 'மருந்துகள் இல்லை', style: const TextStyle(color: Colors.grey)),
                               ],
                             ),
                           ),

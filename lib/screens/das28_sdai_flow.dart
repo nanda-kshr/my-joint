@@ -171,14 +171,24 @@ class _Das28SdaiFlowScreenState extends State<Das28SdaiFlowScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildProgressBar(),
-                      const SizedBox(height: 18),
-                      _buildStep(),
-                    ],
+                  child: LayoutBuilder(
+                    builder: (context, innerConstraints) {
+                      // Limit card height and make contents scrollable so buttons are always reachable
+                      final maxCardHeight = MediaQuery.of(context).size.height * 0.78;
+                      return ConstrainedBox(
+                        constraints: BoxConstraints(maxHeight: maxCardHeight),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _buildProgressBar(),
+                              const SizedBox(height: 18),
+                              _buildStep(),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

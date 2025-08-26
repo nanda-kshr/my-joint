@@ -19,11 +19,20 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
   int? _uid;
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _initializeApiService();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -79,8 +88,8 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Treatments', style: TextStyle(fontWeight: FontWeight.bold)),
+  appBar: AppBar(
+    title: Text(_selectedLanguage == 'en' ? 'Treatments' : 'சிகிச்சைகள்', style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.teal),
@@ -89,8 +98,8 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _treatments.isEmpty
-                  ? const Center(child: Text('No treatments found.'))
+      : _treatments.isEmpty
+      ? Center(child: Text(_selectedLanguage == 'en' ? 'No treatments found.' : 'சிகிச்சைகள் கிடைக்கவில்லை.'))
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -109,7 +118,7 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
                                   children: [
                                     const Icon(Icons.healing, color: Colors.teal),
                                     const SizedBox(width: 8),
-                                    Text('Treatment', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.teal)),
+                                    Text(_selectedLanguage == 'en' ? 'Treatment' : 'சிகிச்சை', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.teal)),
                                     const Spacer(),
                                     if (c['createdAt'] != null)
                                       Text(
@@ -120,10 +129,10 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
                                 ),
                                 const SizedBox(height: 10),
                                 Text('${c['treatment'] ?? ''}${c['name'] != null ? ' - ' + c['name'] : ''}', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-                                if (c['dose'] != null) Text('Dose: ${c['dose']}'),
-                                if (c['route'] != null) Text('Route: ${c['route']}'),
-                                if (c['frequency_text'] != null) Text('Frequency: ${c['frequency_text']}'),
-                                if (c['Time_Period'] != null) Text('Duration: ${c['Time_Period']}'),
+                                if (c['dose'] != null) Text(_selectedLanguage == 'en' ? 'Dose: ${c['dose']}' : 'மாத்திரை: ${c['dose']}'),
+                                if (c['route'] != null) Text(_selectedLanguage == 'en' ? 'Route: ${c['route']}' : 'முறை: ${c['route']}'),
+                                if (c['frequency_text'] != null) Text(_selectedLanguage == 'en' ? 'Frequency: ${c['frequency_text']}' : 'அதிகமா: ${c['frequency_text']}'),
+                                if (c['Time_Period'] != null) Text(_selectedLanguage == 'en' ? 'Duration: ${c['Time_Period']}' : 'காலம்: ${c['Time_Period']}'),
                               ],
                             ),
                           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -10,7 +11,27 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
-  String _selectedLanguage = 'English';
+  String _selectedLanguage = 'en'; // 'en' or 'ta'
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
+  }
+
+  Future<void> _setLanguage(String lang) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('language', lang);
+    setState(() {
+      _selectedLanguage = lang;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +64,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _buildDropdownTile(
-            'Language',
-            'Select your preferred language',
+            _selectedLanguage == 'en' ? 'Language' : 'மொழி',
+            _selectedLanguage == 'en' ? 'Select your preferred language' : 'உங்கள் விருப்பமான மொழியை தேர்ந்தெடுக்கவும்',
             _selectedLanguage,
-            ['English', 'Spanish', 'French', 'German'],
+            [
+              'en',
+              'ta',
+            ],
             (value) {
-              setState(() {
-                _selectedLanguage = value!;
-              });
+              if (value != null) _setLanguage(value);
+            },
+            labels: {
+              'en': 'English',
+              'ta': 'தமிழ்',
             },
           ),
           const SizedBox(height: 24),
@@ -136,6 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String value,
     List<String> items,
     ValueChanged<String?> onChanged,
+    {Map<String, String>? labels}
   ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -147,7 +174,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           items: items.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item),
+              child: Text(labels != null ? labels[item] ?? item : item),
             );
           }).toList(),
           onChanged: onChanged,

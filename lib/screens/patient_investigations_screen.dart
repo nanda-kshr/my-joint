@@ -19,11 +19,20 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
   int? _uid;
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _initializeApiService();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -79,8 +88,8 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Investigations', style: TextStyle(fontWeight: FontWeight.bold)),
+  appBar: AppBar(
+    title: Text(_selectedLanguage == 'en' ? 'Investigations' : 'ஆய்வுகள்', style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.deepPurple),
@@ -89,8 +98,8 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _investigations.isEmpty
-                  ? const Center(child: Text('No investigations found.'))
+      : _investigations.isEmpty
+      ? Center(child: Text(_selectedLanguage == 'en' ? 'No investigations found.' : 'ஆய்வுகள் இல்லை.'))
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -112,7 +121,7 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
                                   children: [
                                     const Icon(Icons.science, color: Colors.deepPurple),
                                     const SizedBox(width: 8),
-                                    Text('Investigation', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
+                                    Text(_selectedLanguage == 'en' ? 'Investigation' : 'ஆய்வு', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
                                     const Spacer(),
                                     if (c['createdAt'] != null)
                                       Text(

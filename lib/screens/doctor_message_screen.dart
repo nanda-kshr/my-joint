@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class DoctorMessageScreen extends StatelessWidget {
+class DoctorMessageScreen extends StatefulWidget {
   final String complaint;
   final VoidCallback onApprove;
   final VoidCallback onReject;
@@ -13,18 +14,37 @@ class DoctorMessageScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<DoctorMessageScreen> createState() => _DoctorMessageScreenState();
+}
+
+class _DoctorMessageScreenState extends State<DoctorMessageScreen> {
+  String _selectedLanguage = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() { _selectedLanguage = prefs.getString('language') ?? 'en'; });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isEn = _selectedLanguage == 'en';
     return AlertDialog(
-      title: const Text('Patient Complaint'),
-      content: Text(complaint),
+      title: Text(isEn ? 'Patient Complaint' : 'ரோகி புகார்'),
+      content: Text(widget.complaint),
       actions: [
         TextButton(
-          onPressed: onReject,
-          child: const Text('Reject', style: TextStyle(color: Colors.red)),
+          onPressed: widget.onReject,
+          child: Text(isEn ? 'Reject' : 'நிராகரி', style: const TextStyle(color: Colors.red)),
         ),
         ElevatedButton(
-          onPressed: onApprove,
-          child: const Text('Approve'),
+          onPressed: widget.onApprove,
+          child: Text(isEn ? 'Approve' : 'அனுமதி'),
         ),
       ],
     );

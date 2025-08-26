@@ -20,11 +20,13 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   String? _error;
   Map<String, dynamic>? _userData;
   List<dynamic> _notifications = [];
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
-    super.initState();
-    _initializeApiService();
+  super.initState();
+  _initializeApiService();
+  _loadLanguage();
   }
 
   Future<void> _initializeApiService() async {
@@ -33,6 +35,14 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     await _loadData();
     await _fetchNotifications();
   }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
+  }
+
 
   Future<void> _fetchNotifications() async {
     try {
@@ -108,7 +118,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_userData?['name'] ?? 'Doctor Dashboard'),
+        title: Text(_userData?['name'] ?? (_selectedLanguage == 'en' ? 'Doctor Dashboard' : 'மருத்துவர் டாஷ்போர்டு')),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
@@ -116,10 +126,12 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             onPressed: () {
               Navigator.pushNamed(context, '/settings');
             },
+            tooltip: _selectedLanguage == 'en' ? 'Settings' : 'அமைப்புகள்',
           ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
+            tooltip: _selectedLanguage == 'en' ? 'Logout' : 'வெளியேறு',
           ),
         ],
       ),
@@ -140,7 +152,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _loadData,
-                        child: const Text('Retry'),
+                        child: Text(_selectedLanguage == 'en' ? 'Retry' : 'மீண்டும் முயற்சி'),
                       ),
                     ],
                   ),
@@ -153,7 +165,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                         leading: const CircleAvatar(
                           child: Icon(Icons.person),
                         ),
-                        title: Text(_userData?['name'] ?? 'Doctor'),
+                        title: Text(_userData?['name'] ?? (_selectedLanguage == 'en' ? 'Doctor' : 'மருத்துவர்')),
                         subtitle: Text(_userData?['email'] ?? ''),
                       ),
                     ),
@@ -164,7 +176,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                           Icon(Icons.people, color: Colors.blue.shade600),
                           const SizedBox(width: 8),
                           Text(
-                            'My Patients (${_patients.length})',
+                            _selectedLanguage == 'en'
+                                ? 'My Patients (${_patients.length})'
+                                : 'என் நோயாளிகள் (${_patients.length})',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -183,7 +197,9 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                   Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'No patients assigned yet.',
+                                    _selectedLanguage == 'en'
+                                        ? 'No patients assigned yet.'
+                                        : 'நோயாளிகள் ஏதும் வழங்கப்படவில்லை.',
                                     style: TextStyle(color: Colors.grey.shade600),
                                   ),
                                 ],
@@ -266,7 +282,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
             ),
           );
         },
-        tooltip: 'Manage Patients',
+        tooltip: _selectedLanguage == 'en' ? 'Manage Patients' : 'நோயாளிகளை நிர்வகிக்கவும்',
         child: const Icon(Icons.add),
       ),
     );

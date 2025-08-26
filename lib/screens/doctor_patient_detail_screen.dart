@@ -16,6 +16,7 @@ class DoctorPatientDetailScreen extends StatefulWidget {
 class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
   late ApiService _apiService;
   late int _uid;
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {

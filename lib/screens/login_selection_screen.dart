@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'doctor_login_screen.dart';
 import 'patient_login_screen.dart';
 
@@ -14,6 +15,8 @@ class _LoginSelectionScreenState extends State<LoginSelectionScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
@@ -40,6 +43,14 @@ class _LoginSelectionScreenState extends State<LoginSelectionScreen>
     ));
 
     _controller.forward();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   @override
@@ -64,150 +75,63 @@ class _LoginSelectionScreenState extends State<LoginSelectionScreen>
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
+          child: Center(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 60),
-                // Header Section
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 100,
-                              height: 100,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.blue.shade600,
-                                    Colors.indigo.shade700,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(25),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.blue.shade200,
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.medical_services,
-                                size: 50,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 30),
-                            const Text(
-                              'Welcome to',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w300,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'My Joints',
-                              style: TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Comprehensive Joint Care & Assessment Platform',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w400,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Column(
+                      children: [
+                        Text(
+                          _selectedLanguage == 'en' ? 'Welcome!' : 'வரவேற்கிறோம்!',
+                          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                
-                const Spacer(),
-                
-                // Login Options
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: Column(
-                          children: [
-                            _buildLoginCard(
+                        const SizedBox(height: 16),
+                        Text(
+                          _selectedLanguage == 'en' ? 'Select your role to continue' : 'தொடர உங்கள் வகுப்பை தேர்ந்தெடுக்கவும்',
+                          style: const TextStyle(fontSize: 18, color: Colors.black54),
+                        ),
+                        const SizedBox(height: 40),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.person, size: 28),
+                          label: Text(_selectedLanguage == 'en' ? 'Patient Login' : 'நோயாளர் உள்நுழைவு', style: const TextStyle(fontSize: 20)),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(220, 48),
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
                               context,
-                              title: 'Doctor Login',
-                              subtitle: 'Access patient records and assessments',
-                              icon: Icons.local_hospital,
-                              color: Colors.blue,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const DoctorLoginScreen(),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildLoginCard(
+                              MaterialPageRoute(builder: (context) => const PatientLoginScreen()),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.medical_services, size: 28),
+                          label: Text(_selectedLanguage == 'en' ? 'Doctor Login' : 'மருத்துவர் உள்நுழைவு', style: const TextStyle(fontSize: 20)),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(220, 48),
+                            backgroundColor: Colors.indigo,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
                               context,
-                              title: 'Patient Login',
-                              subtitle: 'View your health records and progress',
-                              icon: Icons.person,
-                              color: Colors.green,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const PatientLoginScreen(),
-                                ),
-                              ),
-                            ),
-                          ],
+                              MaterialPageRoute(builder: (context) => const DoctorLoginScreen()),
+                            );
+                          },
                         ),
-                      ),
-                    );
-                  },
+                      ],
+                    ),
+                  ),
                 ),
-                
-                const SizedBox(height: 60),
-                
-                // Footer
-                AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Text(
-                        'Secure • Reliable • Professional',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                
-                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -216,94 +140,4 @@ class _LoginSelectionScreenState extends State<LoginSelectionScreen>
     );
   }
 
-  Widget _buildLoginCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-        border: Border.all(
-          color: color.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withOpacity(0.8),
-                        color,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: color,
-                  size: 20,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 } 

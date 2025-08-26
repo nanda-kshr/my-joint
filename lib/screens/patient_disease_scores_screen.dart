@@ -23,11 +23,20 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
   final _formKey = GlobalKey<FormState>();
   final _sdaiController = TextEditingController();
   final _das28crpController = TextEditingController();
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _initializeApiService();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -296,7 +305,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        title: const Text('Disease Scores', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+        title: Text(_selectedLanguage == 'en' ? 'Disease Scores' : 'நோய் மதிப்பீடுகள்', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       floatingActionButton: _userRole == 'doctor'
@@ -330,7 +339,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _loadDiseaseScores,
-                        child: const Text('Retry'),
+                        child: Text(_selectedLanguage == 'en' ? 'Retry' : 'மீண்டும்'),
                       ),
                     ],
                   ),

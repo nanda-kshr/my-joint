@@ -1,37 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  String _selectedLanguage = 'en';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isEn = _selectedLanguage == 'en';
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(isEn ? 'Profile' : 'சுயவிவரம்'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Center(
+            Center(
               child: Column(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 50,
                     child: Icon(Icons.person, size: 50),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     'John Doe',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     'john.doe@example.com',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
                     ),
@@ -40,56 +62,56 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
-              'Personal Information',
-              style: TextStyle(
+            Text(
+              isEn ? 'Personal Information' : 'தனிப்பட்ட தகவல்கள்',
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
-              'Age',
+              isEn ? 'Age' : 'வயது',
               '45 years',
               Icons.calendar_today,
             ),
             _buildInfoCard(
-              'Gender',
-              'Male',
+              isEn ? 'Gender' : 'பாலினம்',
+              isEn ? 'Male' : 'ஆண்',
               Icons.person,
             ),
             _buildInfoCard(
-              'Phone',
+              isEn ? 'Phone' : 'தொலைபேசி',
               '+1 234 567 8900',
               Icons.phone,
             ),
             _buildInfoCard(
-              'Address',
+              isEn ? 'Address' : 'முகவரி',
               '123 Health Street, Medical City',
               Icons.location_on,
             ),
             const SizedBox(height: 32),
-            const Text(
-              'Medical Information',
-              style: TextStyle(
+            Text(
+              isEn ? 'Medical Information' : 'மருத்துவத் தகவல்கள்',
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
             _buildInfoCard(
-              'Blood Type',
+              isEn ? 'Blood Type' : 'இரத்த வகை',
               'O+',
               Icons.bloodtype,
             ),
             _buildInfoCard(
-              'Allergies',
-              'None',
+              isEn ? 'Allergies' : 'ஆலர்ஜீஸ்',
+              isEn ? 'None' : 'இல்லை',
               Icons.warning,
             ),
             _buildInfoCard(
-              'Conditions',
-              'Joint Pain, Arthritis',
+              isEn ? 'Conditions' : 'நிலைமைகள்',
+              isEn ? 'Joint Pain, Arthritis' : 'மூட்டு வலிப்பு, ஒட்டுக்குழாய் அழற்சி',
               Icons.medical_services,
             ),
             const SizedBox(height: 32),
@@ -102,7 +124,7 @@ class ProfileScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text('Edit Profile'),
+                child: Text(isEn ? 'Edit Profile' : 'சுயவிவரத்தை திருத்து'),
               ),
             ),
           ],
@@ -121,4 +143,4 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

@@ -9,9 +9,9 @@ import 'patient_medications_screen.dart';
 import 'patient_investigations_screen.dart';
 import 'patient_treatments_screen.dart';
 
-import 'temp_screen.dart';
+// temp_screen.dart import removed
 import 'consult_now_screen.dart';
-import 'health_records_screen.dart';
+// health_records_screen.dart removed per request (health records UI disabled)
 import 'diet_screen.dart';
 import 'exercise_screen.dart';
 import 'patient_daily_assessment_screen.dart';
@@ -31,11 +31,13 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
   bool _isLoading = true;
   String? _error;
   Map<String, dynamic>? _userData;
+  String _selectedLanguage = 'en'; // 'en' or 'ta'
 
   @override
   void initState() {
-    super.initState();
-    _initializeApiService();
+  super.initState();
+  _initializeApiService();
+  _loadLanguage();
   }
 
   Future<void> _initializeApiService() async {
@@ -43,6 +45,14 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
     _apiService = ApiService(prefs);
     _loadUserData();
   }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
+  }
+
 
   Future<void> _loadUserData() async {
     try {
@@ -84,7 +94,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        title: Text(_userData?['name'] ?? 'Patient Dashboard', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+        title: Text(_userData?['name'] ?? (_selectedLanguage == 'en' ? 'Patient Dashboard' : 'நோயாளர் டாஷ்போர்டு'), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
           IconButton(
@@ -92,12 +102,12 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
             onPressed: () {
               Navigator.pushNamed(context, '/settings');
             },
-            tooltip: 'Settings',
+            tooltip: _selectedLanguage == 'en' ? 'Settings' : 'அமைப்புகள்',
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.redAccent),
             onPressed: _logout,
-            tooltip: 'Logout',
+            tooltip: _selectedLanguage == 'en' ? 'Logout' : 'வெளியேறு',
           ),
         ],
       ),
@@ -118,7 +128,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _loadUserData,
-                        child: const Text('Retry'),
+                        child: Text(_selectedLanguage == 'en' ? 'Retry' : 'மீண்டும் முயற்சி'),
                       ),
                     ],
                   ),
@@ -136,7 +146,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             backgroundColor: Colors.blueAccent,
                             child: Icon(Icons.person, color: Colors.white),
                           ),
-                          title: Text(_userData?['name'] ?? 'Patient', style: const TextStyle(fontWeight: FontWeight.w500)),
+                          title: Text(_userData?['name'] ?? (_selectedLanguage == 'en' ? 'Patient' : 'நோயாளர்'), style: const TextStyle(fontWeight: FontWeight.w500)),
                           subtitle: Text(_userData?['email'] ?? '', style: const TextStyle(color: Colors.black54)),
                         ),
                       ),
@@ -150,7 +160,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                         children: [
                           _buildDashboardItem(
                             context,
-                            'Complaints',
+                            _selectedLanguage == 'en' ? 'Complaints' : 'புகார்கள்',
                             Icons.note_add,
                             Colors.blue,
                             () => Navigator.push(
@@ -162,7 +172,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                           ),
                           _buildDashboardItem(
                             context,
-                            'Comorbidities',
+                            _selectedLanguage == 'en' ? 'Comorbidities' : 'இணை நோய்கள்',
                             Icons.medical_services,
                             Colors.orange,
                             () => Navigator.push(
@@ -174,7 +184,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                           ),
                           _buildDashboardItem(
                             context,
-                            'Daily Assessment',
+                            _selectedLanguage == 'en' ? 'Daily Assessment' : 'தினசரி மதிப்பீடு',
                             Icons.assessment,
                             Colors.deepPurple,
                             () {
@@ -194,7 +204,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
 // ...existing code...
                           _buildDashboardItem(
                             context,
-                            'Medications',
+                            _selectedLanguage == 'en' ? 'Medications' : 'மருந்துகள்',
                             Icons.medication,
                             Colors.purple,
                             () => Navigator.push(
@@ -206,7 +216,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                           ),
                           _buildDashboardItem(
                             context,
-                            'Investigations',
+                            _selectedLanguage == 'en' ? 'Investigations' : 'ஆய்வுகள்',
                             Icons.science,
                             Colors.teal,
                             () => Navigator.push(
@@ -218,7 +228,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                           ),
                           _buildDashboardItem(
                             context,
-                            'Treatments',
+                            _selectedLanguage == 'en' ? 'Treatments' : 'சிகிச்சைகள்',
                             Icons.healing,
                             Colors.indigo,
                             () => Navigator.push(
@@ -231,7 +241,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                           // New cards
                           _buildDashboardItem(
                             context,
-                            'Diet',
+                            _selectedLanguage == 'en' ? 'Diet' : 'உணவு',
                             Icons.restaurant,
                             Colors.redAccent,
                             () => Navigator.push(
@@ -243,7 +253,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                           ),
                           _buildDashboardItem(
                             context,
-                            'Exercises',
+                            _selectedLanguage == 'en' ? 'Exercises' : 'உடற்பயிற்சி',
                             Icons.fitness_center,
                             Colors.lightGreen,
                             () => Navigator.push(
@@ -253,21 +263,10 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               ),
                             ),
                           ),
+                          // Health Records card removed
                           _buildDashboardItem(
                             context,
-                            'Health Records',
-                            Icons.note,
-                            Colors.deepOrange,
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => HealthRecordsScreen(patientUid: _userData?['uid']),
-                              ),
-                            ),
-                          ),
-                          _buildDashboardItem(
-                            context,
-                            'Consult Now',
+                            _selectedLanguage == 'en' ? 'Consult Now' : 'இப்போது ஆலோசனை',
                             Icons.support_agent,
                             Colors.cyan,
                             () => Navigator.push(

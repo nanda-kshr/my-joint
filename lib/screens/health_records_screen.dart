@@ -18,11 +18,20 @@ class _HealthRecordsScreenState extends State<HealthRecordsScreen> {
   bool _isLoading = false;
   int? _patientId;
   String? _userType;
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
+    _loadLanguage();
     _initApi();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initApi() async {
@@ -108,21 +117,21 @@ class _HealthRecordsScreenState extends State<HealthRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Health Records'),
+  appBar: AppBar(
+    title: Text(_selectedLanguage == 'en' ? 'Health Records' : 'சுகாதார பதிவுகள்'),
         actions: [
           if (_userType == 'doctor' || _userType == 'patient')
             IconButton(
               icon: const Icon(Icons.upload_file),
               onPressed: _uploadRecord,
-              tooltip: 'Upload PDF',
+      tooltip: _selectedLanguage == 'en' ? 'Upload PDF' : 'PDF பதிவேற்றம்',
             ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _records.isEmpty
-              ? const Center(child: Text('No health records found.'))
+      ? Center(child: Text(_selectedLanguage == 'en' ? 'No health records found.' : 'சுகாதார பதிவுகள் இல்லை.'))
               : ListView.builder(
                   itemCount: _records.length,
                   itemBuilder: (context, index) {
@@ -130,11 +139,11 @@ class _HealthRecordsScreenState extends State<HealthRecordsScreen> {
                     return ListTile(
                       leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
                       title: Text(record['original_filename'] ?? ''),
-                      subtitle: Text('Uploaded: ${record['uploaded_at'] ?? ''}'),
+                      subtitle: Text((_selectedLanguage == 'en' ? 'Uploaded: ' : 'பதிவேற்றம்: ') + (record['uploaded_at'] ?? '')),
                       trailing: IconButton(
                         icon: const Icon(Icons.download),
                         onPressed: () => _downloadRecord(record),
-                        tooltip: 'Download',
+                        tooltip: _selectedLanguage == 'en' ? 'Download' : 'இணையமிறக்கம்',
                       ),
                     );
                   },

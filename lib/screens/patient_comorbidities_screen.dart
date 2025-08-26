@@ -16,11 +16,20 @@ class _PatientComorbiditiesScreenState extends State<PatientComorbiditiesScreen>
   String? _error;
   List<Map<String, dynamic>> _comorbidities = [];
   int? _uid;
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
     _initializeApiService();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -36,7 +45,7 @@ class _PatientComorbiditiesScreenState extends State<PatientComorbiditiesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Comorbidities', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(_selectedLanguage == 'en' ? 'Comorbidities' : 'இணை நோய்கள்', style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 1,
         iconTheme: const IconThemeData(color: Colors.orange),
@@ -46,7 +55,7 @@ class _PatientComorbiditiesScreenState extends State<PatientComorbiditiesScreen>
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
               : _comorbidities.isEmpty
-                  ? const Center(child: Text('No comorbidities found.'))
+                  ? Center(child: Text(_selectedLanguage == 'en' ? 'No comorbidities found.' : 'இணை நோய்கள் எதுவும் இல்லை.'))
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -65,7 +74,7 @@ class _PatientComorbiditiesScreenState extends State<PatientComorbiditiesScreen>
                                   children: [
                                     const Icon(Icons.medical_services, color: Colors.orange),
                                     const SizedBox(width: 8),
-                                    Text('Comorbidity', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.orange)),
+                                    Text(_selectedLanguage == 'en' ? 'Comorbidity' : 'இணை நோய்', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.orange)),
                                     const Spacer(),
                                     if (c['createdAt'] != null)
                                       Text(
