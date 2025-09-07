@@ -233,11 +233,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                                 complaint: notification['message'] ?? 'No complaint provided.',
                                                 onApprove: () {
                                                   Navigator.of(ctx).pop();
-                                                  _updateNotificationStatus(notification['id'], 'accepted');
+                                                  _updateNotificationStatus(notification['_id'], 'accepted');
                                                 },
                                                 onReject: () {
                                                   Navigator.of(ctx).pop();
-                                                  _updateNotificationStatus(notification['id'], 'rejected');
+                                                  _updateNotificationStatus(notification['_id'], 'rejected');
                                                 },
                                               ),
                                             );

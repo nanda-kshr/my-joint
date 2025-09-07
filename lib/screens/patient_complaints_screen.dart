@@ -84,7 +84,7 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
                         final c = _complaints[index];
                         final complaintText = c['complaint'] ?? '';
                         final description = c['description'] ?? '';
-                        final dateText = c['date'] ?? '';
+                        final dateText = c['created_at'] ?? '';
                         return Card(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 2,
