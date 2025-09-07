@@ -16,7 +16,7 @@ class _HealthRecordsScreenState extends State<HealthRecordsScreen> {
   late ApiService _apiService;
   List<dynamic> _records = [];
   bool _isLoading = false;
-  int? _patientId;
+  String? _patientId;
   String? _userType;
   String _selectedLanguage = 'en';
 
@@ -41,7 +41,7 @@ class _HealthRecordsScreenState extends State<HealthRecordsScreen> {
     if (widget.patientUid is int) {
       _patientId = widget.patientUid;
     } else if (widget.patientUid is String) {
-      _patientId = int.tryParse(widget.patientUid);
+      _patientId = widget.patientUid;
     } else {
       _patientId = null;
     }

@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'das28_sdai_flow.dart';
 
 class PatientDiseaseScoresScreen extends StatefulWidget {
-  final int? patientUid;
+  final String? patientUid;
   const PatientDiseaseScoresScreen({super.key, this.patientUid});
 
   @override
@@ -19,7 +19,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
   String? _error;
   List<Map<String, dynamic>> _diseaseScores = [];
   String? _userRole;
-  int? _uid;
+  String? _uid;
   final _formKey = GlobalKey<FormState>();
   final _sdaiController = TextEditingController();
   final _das28crpController = TextEditingController();
@@ -43,7 +43,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
     _userRole = await _apiService.getUserType();
-    _uid = widget.patientUid ?? int.tryParse(await _apiService.getUserId() ?? '');
+    _uid = widget.patientUid ?? await _apiService.getUserId() ?? '';
     _loadDiseaseScores();
   }
 
@@ -153,15 +153,15 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
     }
 
     final sortedScores = List<Map<String, dynamic>>.from(_diseaseScores);
-    sortedScores.sort((a, b) {
-      final dateA = DateTime.parse(a['createdAt']);
-      final dateB = DateTime.parse(b['createdAt']);
-      return dateA.compareTo(dateB);
-    });
+  sortedScores.sort((a, b) {
+  final dateA = a['created_at'] != null ? DateTime.parse(a['created_at'].toString()) : DateTime(1970);
+  final dateB = b['created_at'] != null ? DateTime.parse(b['created_at'].toString()) : DateTime(1970);
+  return dateA.compareTo(dateB);
+  });
 
-    final last12Scores = sortedScores.length > 12
-        ? sortedScores.sublist(sortedScores.length - 12)
-        : sortedScores;
+  final last12Scores = sortedScores.length > 12
+    ? sortedScores.sublist(sortedScores.length - 12)
+    : sortedScores;
 
     final primaryColor = Theme.of(context).primaryColor;
     final textColor =
@@ -195,12 +195,14 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index >= 0 && index < last12Scores.length) {
-                  final date =
-                      DateTime.parse(last12Scores[index]['createdAt']);
+                  final dateStr = last12Scores[index]['created_at']?.toString();
+                  final date = dateStr != null ? DateTime.parse(dateStr) : DateTime(1970);
+                  // MongoDB ISODate format
+                  final mongoDate = date.toUtc().toIso8601String();
                   return SideTitleWidget(
                     meta: meta,
                     space: 8.0,
-                    child: Text(DateFormat.Md().format(date),
+                    child: Text(mongoDate.substring(0, 10),
                         style: TextStyle(
                             color: textColor,
                             fontWeight: FontWeight.bold,
@@ -284,9 +286,11 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
                 final scoreData = last12Scores[spot.spotIndex];
-                final date = DateTime.parse(scoreData['createdAt']);
+                final dateStr = scoreData['created_at']?.toString();
+                final date = dateStr != null ? DateTime.parse(dateStr) : DateTime(1970);
+                final mongoDate = date.toUtc().toIso8601String();
                 return LineTooltipItem(
-                  '${spot.y.toStringAsFixed(1)}\n${DateFormat.yMd().format(date)}',
+                  '${spot.y.toStringAsFixed(1)}\n${mongoDate}',
                   TextStyle(
                       color: colorFunction(spot.y), fontWeight: FontWeight.bold),
                 );
@@ -438,14 +442,14 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                                 vertical: 8,
                               ),
                               child: ListTile(
-                                title: Text('Disease Score #${score['id']}', style: const TextStyle(fontWeight: FontWeight.w500)),
+                                title: Text('Disease Score', style: const TextStyle(fontWeight: FontWeight.w500)),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('SDAI: ${score['SDAI'] ?? score['sdai'] ?? 'N/A'}'),
                                     Text('DAS28-CRP: ${score['DAS_28_CRP'] ?? score['das_28_crp'] ?? 'N/A'}'),
                                     Text(
-                                      'Date: ${score['createdAt'] != null ? DateFormat.yMd().add_jm().format(DateTime.parse(score['createdAt'])) : 'Unknown'}',
+                                      'Date: ${score['created_at'] != null ? DateTime.parse(score['created_at'].toString()).toUtc().toIso8601String() : 'Unknown'}',
                                     ),
                                   ],
                                 ),
@@ -513,8 +517,8 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
   List<FlSpot> _getSpots(String key1, String key2) {
     final sortedScores = List<Map<String, dynamic>>.from(_diseaseScores);
     sortedScores.sort((a, b) {
-      final dateA = DateTime.parse(a['createdAt']);
-      final dateB = DateTime.parse(b['createdAt']);
+      final dateA = a['created_at'] != null ? DateTime.parse(a['created_at'].toString()) : DateTime(1970);
+      final dateB = b['created_at'] != null ? DateTime.parse(b['created_at'].toString()) : DateTime(1970);
       return dateA.compareTo(dateB);
     });
 

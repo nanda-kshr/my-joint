@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 
 class PatientComplaintsScreen extends StatefulWidget {
-  final int? patientUid;
+  final String? patientUid;
   const PatientComplaintsScreen({Key? key, this.patientUid}) : super(key: key);
 
   @override
@@ -15,7 +15,7 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _complaints = [];
-  int? _uid;
+  String? _uid;
   String _selectedLanguage = 'en';
 
   @override
@@ -37,7 +37,7 @@ class _PatientComplaintsScreenState extends State<PatientComplaintsScreen> {
     _apiService = ApiService(prefs);
     final storedUserId = await _apiService.getUserId();
     setState(() {
-      _uid = widget.patientUid ?? int.tryParse(storedUserId ?? '');
+      _uid = widget.patientUid ?? storedUserId ?? '';
     });
     await _loadComplaints();
   }

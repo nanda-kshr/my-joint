@@ -3,7 +3,7 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PatientTreatmentsScreen extends StatefulWidget {
-  final int? patientUid;
+  final String? patientUid;
   const PatientTreatmentsScreen({super.key, this.patientUid});
 
   @override
@@ -16,7 +16,7 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
   String? _error;
   List<Map<String, dynamic>> _treatments = [];
   String? _userRole;
-  int? _uid;
+  String? _uid;
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
   String _selectedLanguage = 'en';
@@ -39,7 +39,7 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
     _userRole = await _apiService.getUserType();
-    _uid = widget.patientUid ?? int.tryParse(await _apiService.getUserId() ?? '');
+    _uid = widget.patientUid ?? await _apiService.getUserId() ?? '';
     _loadTreatments();
   }
 

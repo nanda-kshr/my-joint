@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class PatientMedicationsScreen extends StatefulWidget {
-  final int? patientUid;
+  final String? patientUid;
   const PatientMedicationsScreen({super.key, this.patientUid});
 
   @override
@@ -16,7 +17,7 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
   String? _error;
   List<Map<String, dynamic>> _medications = [];
   String? _userRole;
-  int? _uid;
+  String? _uid;
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
   String _selectedLanguage = 'en';
@@ -39,7 +40,7 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
     _userRole = await _apiService.getUserType();
-    _uid = widget.patientUid ?? int.tryParse(await _apiService.getUserId() ?? '');
+    _uid = widget.patientUid ?? await _apiService.getUserId() ?? '';
     _loadMedications();
   }
 
@@ -47,8 +48,37 @@ class _PatientMedicationsScreenState extends State<PatientMedicationsScreen> {
     setState(() { _isLoading = true; });
     try {
       final medications = await _apiService.getPatientMedications(uid: _uid);
+      // Normalize each record's medications field: backend may return a JSON string
+      // or a List. Convert strings into List<Map<String, dynamic>>.
+      final parsed = medications.map<Map<String, dynamic>>((c) {
+        final medsField = c['medications'];
+        List<dynamic> medsList;
+        try {
+          if (medsField == null) {
+            medsList = [];
+          } else if (medsField is List) {
+            medsList = medsField;
+          } else if (medsField is String) {
+            if (medsField.trim().isEmpty) {
+              medsList = [];
+            } else {
+              final decoded = jsonDecode(medsField);
+              medsList = decoded is List ? decoded : [];
+            }
+          } else {
+            medsList = [];
+          }
+        } catch (e) {
+          print('Error parsing medications JSON: $e');
+          medsList = [];
+        }
+        return {
+          ...Map<String, dynamic>.from(c),
+          'medications': medsList,
+        };
+      }).toList();
       setState(() {
-        _medications = List<Map<String, dynamic>>.from(medications);
+        _medications = List<Map<String, dynamic>>.from(parsed);
         _isLoading = false;
       });
     } catch (e) {

@@ -64,14 +64,15 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
                 if (emailController.text.isNotEmpty) {
                   try {
                     final prefs = await SharedPreferences.getInstance();
-                    final did = int.tryParse(prefs.getString('user_id') ?? '');
+                    final did = prefs.getString('_id');
+                    print('did: $prefs');
                     if (did != null) {
                       await _apiService.linkDoctorPatient(
                         patientEmail: emailController.text,
                         did: did,
                       );
                       Navigator.pop(context);
-                      _loadPatients(); // Refresh the list
+                      _loadPatients(); 
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Could not find doctor ID.')),

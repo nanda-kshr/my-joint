@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // Step 1: Tender Joints, Step 2: Swollen Joints, Step 3: Assessments, Step 4: CRP, Step 5: Result
 class Das28SdaiFlowScreen extends StatefulWidget {
-  final int? patientUid;
+  final String? patientUid;
   const Das28SdaiFlowScreen({Key? key, this.patientUid}) : super(key: key);
 
   @override
@@ -35,7 +35,7 @@ class _Das28SdaiFlowScreenState extends State<Das28SdaiFlowScreen> {
 
 
   ApiService? _apiService;
-  int? _uid;
+  String? _uid;
 
   @override
   void initState() {

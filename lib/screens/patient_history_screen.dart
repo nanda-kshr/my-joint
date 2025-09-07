@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class PatientHistoryScreen extends StatefulWidget {
   final String type;
-  final int uid;
+  final String uid;
   const PatientHistoryScreen({super.key, required this.type, required this.uid});
 
   @override
@@ -276,7 +277,33 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   }
 
   Widget _buildMedicationItem(dynamic item) {
-    final meds = item['medications'] is List ? item['medications'] : [];
+    // Normalize medications field: backend sometimes returns a JSON string
+    // or a List. Parse strings into List<Map> so UI can render correctly.
+    print("ITEMS");
+    print(item);
+    final medsField = item['medications'];
+    List<dynamic> meds;
+    if (medsField == null) {
+      meds = [];
+    } else if (medsField is List) {
+      meds = medsField;
+    } else if (medsField is String) {
+      try {
+        final parsed = jsonDecode(medsField);
+        if (parsed is List) {
+          meds = parsed;
+        } else {
+          meds = [];
+        }
+      } catch (e) {
+        print('Error parsing medications JSON in history: $e');
+        meds = [];
+      }
+    } else {
+      // unexpected type
+      meds = [];
+    }
+    print('Parsed meds: ' + meds.toString());
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

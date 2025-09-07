@@ -5,7 +5,7 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PatientDailyAssessmentScreen extends StatefulWidget {
-  final int patientUid;
+  final String patientUid;
   const PatientDailyAssessmentScreen({Key? key, required this.patientUid}) : super(key: key);
 
   @override

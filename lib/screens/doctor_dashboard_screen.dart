@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'doctor_patients_screen.dart';
 import 'doctor_patient_detail_screen.dart';
+import 'patient_medications_screen.dart';
 import 'doctor_message_screen.dart';
 
 class DoctorDashboardScreen extends StatefulWidget {
@@ -64,7 +65,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     try {
       final userData = await _apiService.getDoctorProfile();
       final userId = await _apiService.getUserId();
-      final patients = await _apiService.getDoctorPatients(int.parse(userId ?? '0'));
+      final patients = await _apiService.getDoctorPatients();
+
       setState(() {
         _userData = userData;
         _patients = patients;
@@ -78,7 +80,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     }
   }
 
-  Future<void> _updateNotificationStatus(int notificationId, String status) async {
+  Future<void> _updateNotificationStatus(String notificationId, String status) async {
     try {
       final response = await _apiService.updateNotificationStatus(notificationId, status);
       if (response.statusCode == 200) {
@@ -241,6 +243,19 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                             );
                                           },
                                         ),
+                                        IconButton(
+                                          icon: const Icon(Icons.medical_services, color: Colors.deepPurple),
+                                          tooltip: 'View Medicine History',
+                                          onPressed: () {
+                                            print('Navigating to medicine history for patient UID: ' + (patient['_id'] ?? '').toString());
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => PatientMedicationsScreen(patientUid: patient['_id']),
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       ],
                                     );
                                   } else if (notification['status'] == 'accepted') {
@@ -259,6 +274,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                     subtitle: Text(patient['email'] ?? ''),
                                     trailing: statusWidget ?? const Icon(Icons.arrow_forward_ios),
                                     onTap: () {
+                                      print('Tapped patient: ' + (patient['_id'] ?? '').toString());
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -275,6 +291,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          print('Navigating to DoctorPatientsScreen');
           Navigator.push(
             context,
             MaterialPageRoute(

@@ -14,7 +14,7 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
   late ApiService _apiService;
   bool _isLoading = true;
   List<dynamic> _doctors = [];
-  int? _patientId;
+  String? _patientId;
 
   @override
   void initState() {
@@ -25,7 +25,7 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
   Future<void> _initApi() async {
     final prefs = await SharedPreferences.getInstance();
     _apiService = ApiService(prefs);
-    _patientId = int.tryParse(await _apiService.getUserId() ?? '');
+    _patientId = await _apiService.getUserId() ?? '';
     await _fetchDoctors();
   }
 
@@ -53,7 +53,7 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
     }
   }
 
-  Future<void> _consultDoctor(int doctorId) async {
+  Future<void> _consultDoctor(String doctorId) async {
     if (_patientId == null) return;
     try {
       await requestConsultation(
@@ -72,7 +72,7 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
     }
   }
 
-  int? _selectedDoctorId;
+  String? _selectedDoctorId;
   String _complaint = '';
   bool _sending = false;
 
@@ -91,14 +91,14 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
                         itemCount: _doctors.length,
                         itemBuilder: (context, index) {
                           final doctor = _doctors[index];
-                          final doctorId = doctor['did'] ?? doctor['id'];
+                          final doctorId = doctor['did'] ?? doctor['_id'];
                           return Card(
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             child: ListTile(
                               leading: const Icon(Icons.person, color: Colors.blue),
                               title: Text(doctor['name'] ?? 'Doctor'),
                               subtitle: Text(doctor['specialization'] ?? ''),
-                              trailing: Radio<int>(
+                              trailing: Radio<String>(
                                 value: doctorId,
                                 groupValue: _selectedDoctorId,
                                 onChanged: (val) {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'patient_history_screen.dart';
+import 'dart:convert';
 
 class DoctorPatientDetailScreen extends StatefulWidget {
   final Map<String, dynamic> patient;
@@ -14,16 +15,14 @@ class DoctorPatientDetailScreen extends StatefulWidget {
 }
 
 class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
-  late ApiService _apiService;
-  late int _uid;
+  ApiService? _apiService;
+  late String _uid;
   String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
-    _uid = widget.patient['uid'] is int
-        ? widget.patient['uid']
-        : int.tryParse(widget.patient['uid'].toString()) ?? 0;
+    _uid = widget.patient['_id'];
     _initializeApiService();
   }
 
@@ -36,6 +35,47 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // If the ApiService hasn't been initialized yet, show a loading state
+    if (_apiService == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade50,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.patient['name'] ?? 'Patient Details',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: Colors.black87,
+                ),
+              ),
+              if (widget.patient['email'] != null)
+                Text(
+                  widget.patient['email'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+            ],
+          ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(
+              height: 1,
+              color: Colors.grey.shade200,
+            ),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -209,7 +249,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   context,
                   title: 'Complaints',
                   color: Colors.blue,
-                  fetcher: () => _apiService.getPatientComplaints(uid: _uid),
+                  fetcher: () => _apiService!.getPatientComplaints(uid: _uid),
                   onCreate: () => _showCreateDialog('complaint'),
                   itemBuilder: (item) => ListTile(
                     title: Text(item['complaint'] ?? item['text'] ?? ''),
@@ -222,7 +262,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   context,
                   title: 'Comorbidities',
                   color: Colors.orange,
-                  fetcher: () => _apiService.getPatientComorbidities(uid: _uid),
+                  fetcher: () => _apiService!.getPatientComorbidities(uid: _uid),
                   onCreate: () => _showCreateDialog('comorbidity'),
                   itemBuilder: (item) => ListTile(
                     title: Text(item['text'] ?? ''),
@@ -235,7 +275,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   context,
                   title: 'Disease Scores',
                   color: Colors.green,
-                  fetcher: () => _apiService.getPatientDiseaseScores(uid: _uid),
+                  fetcher: () => _apiService!.getPatientDiseaseScores(uid: _uid),
                   onCreate: () {
                     Navigator.push(
                       context,
@@ -260,18 +300,32 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   context,
                   title: 'Medications',
                   color: Colors.purple,
-                  fetcher: () => _apiService.getPatientMedications(uid: _uid),
+                  fetcher: () => _apiService!.getPatientMedications(uid: _uid),
                   onCreate: () => _showCreateDialog('medication'),
                   itemBuilder: (item) {
-                    final meds = item['medications'] is List
-                        ? item['medications']
-                        : [];
+                    List meds = [];
+                    print('Medications card raw item: ' + item.toString());
+                    if (item['medications'] is List) {
+                      print('Medications field (List): ' + item['medications'].toString());
+                      meds = item['medications'];
+                    } else if (item['medications'] is String) {
+                      print('Medications field (String): ' + item['medications'].toString());
+                      try {
+                        meds = jsonDecode(item['medications']);
+                        print('Parsed medications: ' + meds.toString());
+                      } catch (e) {
+                        print('Error parsing medications JSON: ' + e.toString());
+                        meds = [];
+                      }
+                    } else {
+                      print('Medications field is neither List nor String: ' + item['medications'].toString());
+                    }
                     return ListTile(
                       title: Text(meds.isNotEmpty
                           ? meds.map((m) => m['name']).join(', ')
                           : 'No medications'),
-                      subtitle: item['createdAt'] != null
-                          ? Text('Added: ' + (item['createdAt'] ?? ''))
+                      subtitle: item['created_at'] != null
+                          ? Text('Added: ' + (item['created_at'] ?? ''))
                           : null,
                     );
                   },
@@ -280,7 +334,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   context,
                   title: 'Investigations',
                   color: Colors.teal,
-                  fetcher: () => _apiService.getPatientInvestigations(uid: _uid),
+                  fetcher: () => _apiService!.getPatientInvestigations(uid: _uid),
                   onCreate: () => _showCreateDialog('investigation'),
                   itemBuilder: (item) => Card(
                     margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
@@ -318,7 +372,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   context,
                   title: 'Treatments',
                   color: Colors.indigo,
-                  fetcher: () => _apiService.getPatientTreatments(uid: _uid),
+                  fetcher: () => _apiService!.getPatientTreatments(uid: _uid),
                   onCreate: () => _showCreateDialog('treatment'),
                   itemBuilder: (item) => ListTile(
                     title: Text(item['treatment'] ?? ''),
@@ -331,7 +385,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   context,
                   title: 'Referrals',
                   color: Colors.red,
-                  fetcher: () => _apiService.getPatientReferrals(uid: _uid),
+                  fetcher: () => _apiService!.getPatientReferrals(uid: _uid),
                   onCreate: () => _showCreateDialog('referral'),
                   itemBuilder: (item) => ListTile(
                     title: Text(item['text'] ?? ''),
@@ -353,6 +407,11 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
     required VoidCallback onCreate,
     required Widget Function(dynamic item) itemBuilder,
   }) {
+    if (title.toLowerCase() == 'medications') {
+      fetcher().then((data) {
+        print('Fetched medications data for patient $_uid: ' + data.toString());
+      });
+    }
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -554,7 +613,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (controller.text.trim().isEmpty) return;
-                    await _apiService.createPatientComplaint(uid: _uid, text: controller.text.trim());
+                    await _apiService!.createPatientComplaint(uid: _uid, text: controller.text.trim());
                     if (mounted) setState(() {});
                     Navigator.pop(context);
                   },
@@ -579,7 +638,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (controller.text.trim().isEmpty) return;
-                    await _apiService.createPatientComorbidity(uid: _uid, text: controller.text.trim());
+                    await _apiService!.createPatientComorbidity(uid: _uid, text: controller.text.trim());
                     if (mounted) setState(() {});
                     Navigator.pop(context);
                   },
@@ -672,7 +731,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                               })
                           .toList();
                       if (medList.isEmpty) return;
-                      await _apiService.createPatientMedications(uid: _uid, medications: medList);
+                      await _apiService!.createPatientMedications(uid: _uid, medications: medList);
                       if (mounted) setState(() {});
                       Navigator.pop(context);
                     },
@@ -733,7 +792,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                       final val = controllers[f['key']]!.text.trim();
                       if (val.isNotEmpty) data[f['key']!] = val;
                     }
-                    await _apiService.createPatientInvestigation(data);
+                    await _apiService!.createPatientInvestigation(data);
                     if (mounted) setState(() {});
                     Navigator.pop(context);
                   },
@@ -804,7 +863,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   ),
                   ElevatedButton(
                     onPressed: () async {
-                      await _apiService.createPatientTreatment(
+                      await _apiService!.createPatientTreatment(
                         uid: _uid,
                         treatment: treatmentController.text.trim(),
                         name: nameController.text.trim(),
@@ -839,7 +898,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (controller.text.trim().isEmpty) return;
-                    await _apiService.createPatientReferral(uid: _uid, text: controller.text.trim());
+                    await _apiService!.createPatientReferral(uid: _uid, text: controller.text.trim());
                     if (mounted) setState(() {});
                     Navigator.pop(context);
                   },
