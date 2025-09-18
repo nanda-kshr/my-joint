@@ -15,11 +15,20 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _patients = [];
+  String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
     _initializeApiService();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('language') ?? 'en';
+    });
   }
 
   Future<void> _initializeApiService() async {
@@ -45,7 +54,8 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
 
   Future<void> _showLinkPatientDialog() async {
     final emailController = TextEditingController();
-    await showDialog(
+  final lang = _selectedLanguage;
+  await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -75,12 +85,12 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
                       _loadPatients(); 
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Could not find doctor ID.')),
+                        SnackBar(content: Text(lang == 'en' ? 'User cannot be added, ask admin' : 'பயனர் சேர்க்க முடியாது, நிர்வாசியை அணுகவும்')),
                       );
                     }
-                  } catch (e) {
+                    } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to link patient: $e')),
+                      SnackBar(content: Text(lang == 'en' ? 'User cannot be added, ask admin' : 'பயனர் சேர்க்க முடியாது, நிர்வாசியை அணுகவும்')),
                     );
                   }
                 }

@@ -23,13 +23,14 @@ class _LoginSelectionScreenState extends State<LoginSelectionScreen>
   // Cached gradient and decorations
   static const _backgroundGradient = LinearGradient(
     colors: [
-      Color(0xFF667eea),
-      Color(0xFF764ba2),
-      Color(0x99667eea),
+      Color(0xFF059669), // Patient emerald
+      Color(0xFF10B981), // Patient green
+      Color(0xFF3B82F6), // Doctor blue
+      Color(0xFF1E3A8A), // Doctor deep blue
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    stops: [0.0, 0.6, 1.0],
+    stops: [0.0, 0.35, 0.65, 1.0],
   );
 
   static final _cardDecoration = BoxDecoration(

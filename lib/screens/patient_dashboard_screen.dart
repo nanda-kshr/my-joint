@@ -188,12 +188,18 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             Icons.assessment,
                             Colors.deepPurple,
                             () {
-                              if (_userData?['uid'] != null) {
+                              final rawUid = _userData?['uid'] ?? _userData?['_id'] ?? _userData?['id'];
+                              final uid = rawUid != null ? rawUid.toString() : null;
+                              if (uid != null && uid.isNotEmpty) {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => PatientDailyAssessmentScreen(patientUid: _userData!['uid']),
+                                    builder: (context) => PatientDailyAssessmentScreen(patientUid: uid),
                                   ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(_selectedLanguage == 'en' ? 'Patient id missing' : 'நோயாளர் ஐடி இல்லை')),
                                 );
                               }
                             },
