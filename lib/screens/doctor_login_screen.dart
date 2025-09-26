@@ -22,8 +22,6 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> with TickerProvid
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _specializationController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
@@ -79,8 +77,6 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> with TickerProvid
     _passwordController.dispose();
     _nameController.dispose();
     _specializationController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -104,9 +100,7 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> with TickerProvid
         final registrationData = {
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
-          'phone': _phoneController.text.trim(),
           'specialization': _specializationController.text.trim(),
-          'address': _addressController.text.trim(),
           'password': _passwordController.text,
         };
         
@@ -267,34 +261,6 @@ class _DoctorLoginScreenState extends State<DoctorLoginScreen> with TickerProvid
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Please enter your specialization';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                
-                                _buildTextField(
-                                  controller: _phoneController,
-                                  label: 'Phone Number',
-                                  icon: Icons.phone_outlined,
-                                  keyboardType: TextInputType.phone,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your phone number';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                
-                                _buildTextField(
-                                  controller: _addressController,
-                                  label: 'Address',
-                                  icon: Icons.location_on_outlined,
-                                  maxLines: 3,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your address';
                                     }
                                     return null;
                                   },

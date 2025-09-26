@@ -1,0 +1,7 @@
+keytool -genkey -v -keystore ~/myjoints-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias myjoints# Copy this file to android/key.properties and fill in your keystore details
+# Do NOT commit your real key.properties to source control.
+
+storeFile=/absolute/path/to/your/keystore.jks
+storePassword=your-store-password
+keyAlias=your-key-alias
+keyPassword=your-key-password

@@ -1,4 +1,4 @@
-package com.myjoints.savee
+package com.simats.myjoints
 
 import io.flutter.embedding.android.FlutterActivity
 

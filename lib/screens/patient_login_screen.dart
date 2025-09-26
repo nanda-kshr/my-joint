@@ -21,11 +21,6 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> with TickerProv
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _ageController = TextEditingController();
-  final _weightController = TextEditingController();
-  final _occupationController = TextEditingController();
   String? _selectedGender;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -80,11 +75,6 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> with TickerProv
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
-    _ageController.dispose();
-    _weightController.dispose();
-    _occupationController.dispose();
     super.dispose();
   }
 
@@ -113,12 +103,6 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> with TickerProv
         final registrationData = {
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
-          'phone': _phoneController.text.trim(),
-          'age': int.tryParse(_ageController.text.trim()) ?? 0,
-          'weight': int.tryParse(_weightController.text.trim()) ?? 0,
-          'sex': _selectedGender,
-          'occupation': _occupationController.text.trim(),
-          'address': _addressController.text.trim(),
           'password': _passwordController.text,
         };
         
@@ -272,90 +256,6 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> with TickerProv
                                 ),
                                 const SizedBox(height: 20),
                                 
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: _buildTextField(
-                                        controller: _ageController,
-                                        label: 'Age',
-                                        icon: Icons.cake_outlined,
-                                        keyboardType: TextInputType.number,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter your age';
-                                          }
-                                          if (int.tryParse(value) == null) {
-                                            return 'Please enter a valid age';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: _buildTextField(
-                                        controller: _weightController,
-                                        label: 'Weight (kg)',
-                                        icon: Icons.monitor_weight_outlined,
-                                        keyboardType: TextInputType.number,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter your weight';
-                                          }
-                                          if (int.tryParse(value) == null) {
-                                            return 'Please enter a valid weight';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                
-                                _buildGenderDropdown(),
-                                const SizedBox(height: 20),
-                                
-                                _buildTextField(
-                                  controller: _occupationController,
-                                  label: 'Occupation',
-                                  icon: Icons.work_outline,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your occupation';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                
-                                _buildTextField(
-                                  controller: _phoneController,
-                                  label: 'Phone Number',
-                                  icon: Icons.phone_outlined,
-                                  keyboardType: TextInputType.phone,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your phone number';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                
-                                _buildTextField(
-                                  controller: _addressController,
-                                  label: 'Address',
-                                  icon: Icons.location_on_outlined,
-                                  maxLines: 3,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your address';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
                               ],
                               
                               _buildTextField(
@@ -586,48 +486,4 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> with TickerProv
     );
   }
 
-  Widget _buildGenderDropdown() {
-    return DropdownButtonFormField<String>(
-      decoration: InputDecoration(
-        labelText: 'Gender',
-        prefixIcon: Icon(Icons.person_outline, color: Colors.grey.shade600),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red.shade400),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
-      value: _selectedGender,
-      items: const [
-        DropdownMenuItem(value: 'Male', child: Text('Male')),
-        DropdownMenuItem(value: 'Female', child: Text('Female')),
-        DropdownMenuItem(value: 'Other', child: Text('Other')),
-      ],
-      onChanged: (value) {
-        setState(() {
-          _selectedGender = value;
-        });
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select your gender';
-        }
-        return null;
-      },
-    );
-  }
 }

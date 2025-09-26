@@ -2,7 +2,7 @@ name: my_joints
 description: "My Joints - A professional app for doctors to efficiently manage patient information, including medication history, DAS28-CRP, and SDAI scores, with seamless doctor consultation features."
 publish_to: 'none' 
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.2.3 <4.0.0'
