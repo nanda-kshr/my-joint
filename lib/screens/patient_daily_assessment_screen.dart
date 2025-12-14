@@ -42,13 +42,17 @@ class _PatientDailyAssessmentScreenState extends State<PatientDailyAssessmentScr
     try {
       await _apiService.savePainAssessment(patientId: widget.patientUid, painScore: _painScore.round());
       await _fetchPainAssessments();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_selectedLanguage == 'en' ? 'Pain score saved!' : 'வலி மதிப்பீடு சேமிக்கப்பட்டது!'), backgroundColor: Colors.green),
       );
+      }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_selectedLanguage == 'en' ? 'Failed to save pain score' : 'வலி மதிப்பீட்டை சேமிக்க முடியவில்லை'), backgroundColor: Colors.red),
       );
+      }
     } finally {
       setState(() { _isSavingPain = false; });
     }
@@ -146,7 +150,7 @@ class _PatientDailyAssessmentScreenState extends State<PatientDailyAssessmentScr
               isCurved: true,
               color: Colors.redAccent,
               barWidth: 3,
-              dotData: FlDotData(show: true),
+              dotData: const FlDotData(show: true),
               belowBarData: BarAreaData(show: true, color: Colors.redAccent.withOpacity(0.15)),
             ),
           ],
@@ -160,7 +164,7 @@ class _PatientDailyAssessmentScreenState extends State<PatientDailyAssessmentScr
                       : _painScores[idx];
                   final date = DateTime.tryParse(raw['recorded_at']?.toString() ?? '');
                   final dateText = date != null ? DateFormat.yMd().add_jm().format(date) : '';
-                  return LineTooltipItem('${t.y.toStringAsFixed(1)}\n$dateText', TextStyle(color: Colors.black));
+                  return LineTooltipItem('${t.y.toStringAsFixed(1)}\n$dateText', const TextStyle(color: Colors.black));
                 }).toList();
               },
             ),
@@ -197,7 +201,7 @@ class _PatientDailyAssessmentScreenState extends State<PatientDailyAssessmentScr
                   child: Text(
                     i.toString(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    style: const TextStyle(color: Colors.black54, fontSize: 12),
                   ),
                 );
               }),

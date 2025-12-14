@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
 
 class HealthRecordsScreen extends StatefulWidget {
   final dynamic patientUid;

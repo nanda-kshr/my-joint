@@ -51,11 +51,16 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
     setState(() { _isLoading = true; });
     try {
       final diseaseScores = await _apiService.getPatientDiseaseScores(uid: widget.patientUid ?? _uid);
+      print('Disease scores loaded: ${diseaseScores.length} items');
+      if (diseaseScores.isNotEmpty) {
+        print('First score: ${diseaseScores[0]}');
+      }
       setState(() {
         _diseaseScores = List<Map<String, dynamic>>.from(diseaseScores);
         _isLoading = false;
       });
     } catch (e) {
+      print('Error loading disease scores: $e');
       setState(() {
         _error = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
@@ -290,7 +295,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                 final date = dateStr != null ? DateTime.parse(dateStr) : DateTime(1970);
                 final mongoDate = date.toUtc().toIso8601String();
                 return LineTooltipItem(
-                  '${spot.y.toStringAsFixed(1)}\n${mongoDate}',
+                  '${spot.y.toStringAsFixed(1)}\n$mongoDate',
                   TextStyle(
                       color: colorFunction(spot.y), fontWeight: FontWeight.bold),
                 );
@@ -352,7 +357,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      if (_diseaseScores.length >= 2) ...[
+                      if (_diseaseScores.isNotEmpty) ...[
                         Text('SDAI Score Over Time',
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 20),
@@ -442,7 +447,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                                 vertical: 8,
                               ),
                               child: ListTile(
-                                title: Text('Disease Score', style: const TextStyle(fontWeight: FontWeight.w500)),
+                                title: const Text('Disease Score', style: TextStyle(fontWeight: FontWeight.w500)),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -526,15 +531,22 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
         ? sortedScores.sublist(sortedScores.length - 12)
         : sortedScores;
 
-    return last12Scores.asMap().entries.map((entry) {
+    print('Getting spots for keys: $key1, $key2');
+    print('Number of scores: ${last12Scores.length}');
+    
+    final spots = last12Scores.asMap().entries.map((entry) {
       final index = entry.key;
       final scoreData = entry.value;
       final scoreValue = scoreData[key1] ?? scoreData[key2];
+      print('Index $index: $scoreData -> scoreValue: $scoreValue');
       if (scoreValue != null) {
         return FlSpot(
             index.toDouble(), double.parse(scoreValue.toString()));
       }
       return null;
     }).whereType<FlSpot>().toList();
+    
+    print('Generated ${spots.length} spots');
+    return spots;
   }
 }

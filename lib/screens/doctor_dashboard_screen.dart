@@ -49,7 +49,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
     try {
       final userId = await _apiService.getUserId();
       if (userId == null) return;
-      final response = await _apiService.getAuthenticated('${ApiService.baseUrl}/doctor/notifications?doctor_id=$userId');
+      final response = await _apiService.getAuthenticated('${ApiService.baseUrl}/doctor/notifications.php?doctor_id=$userId');
       if (response.statusCode == 200) {
         final data = response.body.isNotEmpty ? Map<String, dynamic>.from(jsonDecode(response.body)) : {};
         setState(() {
@@ -88,7 +88,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
         setState(() {});
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update notification status')),
+          const SnackBar(content: Text('Failed to update notification status')),
         );
       }
     } catch (e) {
@@ -233,11 +233,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                                 complaint: notification['message'] ?? 'No complaint provided.',
                                                 onApprove: () {
                                                   Navigator.of(ctx).pop();
-                                                  _updateNotificationStatus(notification['_id'], 'accepted');
+                                                  _updateNotificationStatus(notification['id'].toString(), 'accepted');
                                                 },
                                                 onReject: () {
                                                   Navigator.of(ctx).pop();
-                                                  _updateNotificationStatus(notification['_id'], 'rejected');
+                                                  _updateNotificationStatus(notification['id'].toString(), 'rejected');
                                                 },
                                               ),
                                             );
@@ -247,11 +247,11 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                           icon: const Icon(Icons.medical_services, color: Colors.deepPurple),
                                           tooltip: 'View Medicine History',
                                           onPressed: () {
-                                            print('Navigating to medicine history for patient UID: ' + (patient['_id'] ?? '').toString());
+                                            print('Navigating to medicine history for patient UID: ${patient['id'] ?? ''}');
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) => PatientMedicationsScreen(patientUid: patient['_id']),
+                                                builder: (context) => PatientMedicationsScreen(patientUid: patient['id'].toString()),
                                               ),
                                             );
                                           },
@@ -274,7 +274,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
                                     subtitle: Text(patient['email'] ?? ''),
                                     trailing: statusWidget ?? const Icon(Icons.arrow_forward_ios),
                                     onTap: () {
-                                      print('Tapped patient: ' + (patient['_id'] ?? '').toString());
+                                      print('Tapped patient: ${patient['id'] ?? ''}');
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(

@@ -36,24 +36,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
+            const Center(
               child: Column(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 50,
                     child: Icon(Icons.person, size: 50),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'John Doe',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     'john.doe@example.com',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey,
                     ),

@@ -35,11 +35,11 @@ class _PainAssessmentScreenState extends State<PainAssessmentScreen> {
       await _apiService.savePainAssessment(patientId: widget.patientUid, painScore: _painScore.round());
       await _fetchPainAssessments();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Pain score saved!'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Pain score saved!'), backgroundColor: Colors.green),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save pain score'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Failed to save pain score'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() { _isSavingPain = false; });
@@ -60,13 +60,13 @@ class _PainAssessmentScreenState extends State<PainAssessmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Daily Pain Assessment')),
+      appBar: AppBar(title: const Text('Daily Pain Assessment')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('How much pain are you in today?', style: TextStyle(fontSize: 16)),
+            const Text('How much pain are you in today?', style: TextStyle(fontSize: 16)),
             Slider(
               value: _painScore,
               min: 0,
@@ -81,14 +81,14 @@ class _PainAssessmentScreenState extends State<PainAssessmentScreen> {
             ),
             ElevatedButton(
               onPressed: _isSavingPain ? null : _savePainAssessment,
-              child: _isSavingPain ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text('Save'),
+              child: _isSavingPain ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save'),
             ),
             const SizedBox(height: 32),
-            Text('Last 10 pain scores:', style: TextStyle(fontSize: 16)),
-            Container(
+            const Text('Last 10 pain scores:', style: TextStyle(fontSize: 16)),
+            SizedBox(
               height: 120,
               child: _painScores.isEmpty
-                  ? Center(child: Text('No data'))
+                  ? const Center(child: Text('No data'))
                   : Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: CustomPaint(
@@ -115,7 +115,7 @@ class PainChartPainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     if (scores.isEmpty) return;
-    final maxScore = 10.0;
+    const maxScore = 10.0;
     final points = <Offset>[];
     for (int i = 0; i < scores.length; i++) {
       final x = size.width * i / (scores.length - 1);
@@ -132,7 +132,7 @@ class PainChartPainter extends CustomPainter {
       ..color = Colors.grey
       ..strokeWidth = 1;
     canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height), axisPaint);
-    canvas.drawLine(Offset(0, 0), Offset(0, size.height), axisPaint);
+    canvas.drawLine(const Offset(0, 0), Offset(0, size.height), axisPaint);
   }
 
   @override

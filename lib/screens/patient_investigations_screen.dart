@@ -121,7 +121,7 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
                                   children: [
                                     const Icon(Icons.science, color: Colors.deepPurple),
                                     const SizedBox(width: 8),
-                                    Text(_selectedLanguage == 'en' ? 'Investigation' : 'ஆய்வு', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
+                                    Text(_selectedLanguage == 'en' ? 'Investigation' : 'ஆய்வு', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
                                     const Spacer(),
                                     if (c['createdAt'] != null)
                                       Text(

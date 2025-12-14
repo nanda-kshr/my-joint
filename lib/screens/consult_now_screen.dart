@@ -34,7 +34,7 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
     try {
       if (_patientId == null) throw Exception('No patient ID');
       final response = await _apiService.getAuthenticated(
-        '${ApiService.baseUrl}/patient/doctors?patient_id=$_patientId',
+        '${ApiService.baseUrl}/patient/doctors.php?patient_id=$_patientId',
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -91,7 +91,7 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
                         itemCount: _doctors.length,
                         itemBuilder: (context, index) {
                           final doctor = _doctors[index];
-                          final doctorId = doctor['did'] ?? doctor['_id'];
+                          final doctorId = doctor['did'] ?? doctor['id'];
                           return Card(
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             child: ListTile(

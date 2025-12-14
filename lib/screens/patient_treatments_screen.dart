@@ -118,7 +118,7 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
                                   children: [
                                     const Icon(Icons.healing, color: Colors.teal),
                                     const SizedBox(width: 8),
-                                    Text(_selectedLanguage == 'en' ? 'Treatment' : 'சிகிச்சை', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.teal)),
+                                    Text(_selectedLanguage == 'en' ? 'Treatment' : 'சிகிச்சை', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.teal)),
                                     const Spacer(),
                                     if (c['createdAt'] != null)
                                       Text(

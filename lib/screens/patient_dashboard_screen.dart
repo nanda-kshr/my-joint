@@ -188,8 +188,8 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             Icons.assessment,
                             Colors.deepPurple,
                             () {
-                              final rawUid = _userData?['uid'] ?? _userData?['_id'] ?? _userData?['id'];
-                              final uid = rawUid != null ? rawUid.toString() : null;
+                              final rawUid = _userData?['uid'] ?? _userData?['id'];
+                              final uid = rawUid?.toString();
                               if (uid != null && uid.isNotEmpty) {
                                 Navigator.push(
                                   context,
@@ -340,10 +340,10 @@ class PainChartPainter extends CustomPainter {
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     if (scores.isEmpty) return;
-    final maxScore = 10.0;
-    final minScore = 0.0;
-  final leftPadding = 48.0;
-  final bottomPadding = 32.0;
+    const maxScore = 10.0;
+    const minScore = 0.0;
+  const leftPadding = 48.0;
+  const bottomPadding = 32.0;
     final chartWidth = size.width - leftPadding;
     final chartHeight = size.height - bottomPadding;
 
@@ -357,8 +357,8 @@ class PainChartPainter extends CustomPainter {
     canvas.drawLine(Offset(leftPadding, chartHeight), Offset(leftPadding + chartWidth, chartHeight), axisPaint);
 
   // Y axis labels (0, 5, 10) - move inside chart area and increase font size
-  final labelFontSize = 16.0;
-  final labelPadding = 8.0;
+  const labelFontSize = 16.0;
+  const labelPadding = 8.0;
   final textPainter0 = _textPainter('0', fontSize: labelFontSize);
   textPainter0.paint(canvas, Offset(labelPadding, chartHeight - textPainter0.height / 2));
   final textPainter5 = _textPainter('5', fontSize: labelFontSize);

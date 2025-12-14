@@ -7,7 +7,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'dart:developer' as developer;
 
 Future<List<dynamic>> getAllDoctors(ApiService api) async {
-  final response = await api._client.get(Uri.parse('${ApiService.baseUrl}/doctor/patient'));
+  final response = await api._client.get(Uri.parse('${ApiService.baseUrl}/doctor/patient.php'));
   if (response.statusCode == 200) {
     return jsonDecode(response.body);
   } else {
@@ -19,7 +19,7 @@ Future<List<dynamic>> getAllDoctors(ApiService api) async {
 Future<void> requestConsultation(ApiService api, {required String patientId, required String doctorId, required String message}) async {
   final headers = await api._authHeaders();
   final response = await api._client.post(
-    Uri.parse('${ApiService.baseUrl}/doctor/consult-request'),
+    Uri.parse('${ApiService.baseUrl}/doctor/consult-request.php'),
     headers: headers,
     body: jsonEncode({
       'patient_id': patientId,
@@ -35,7 +35,7 @@ Future<void> requestConsultation(ApiService api, {required String patientId, req
 class ApiService {
   // Pain Assessment APIs
   Future<void> savePainAssessment({required String patientId, required int painScore}) async {
-    final response = await _request('POST', '/patient/pain-assessment', body: {
+    final response = await _request('POST', '/patient/pain-assessment.php', body: {
       'patient_id': patientId,
       'pain_score': painScore,
     });
@@ -45,7 +45,7 @@ class ApiService {
   }
 
   Future<List<dynamic>> getPainAssessments({required String patientId}) async {
-    final response = await _request('GET', '/patient/pain-assessment?patient_id=$patientId');
+    final response = await _request('GET', '/patient/pain-assessment.php?patient_id=$patientId');
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data['scores'] ?? [];
@@ -54,7 +54,7 @@ class ApiService {
     }
   }
   // static const String baseUrl = 'http://localhost:3000/api';
-  static const String baseUrl = 'https://my-joints-backend.vercel.app/api';
+  static const String baseUrl = 'http://10.190.79.103/api';
   static const String tokenKey = 'auth_token';
   static const String userTypeKey = 'user_type';
   static const String userIdKey = '_id';
@@ -74,7 +74,7 @@ class ApiService {
 
   // Update notification status (accept/reject)
   Future<http.Response> updateNotificationStatus(String notificationId, String status) async {
-    final url = Uri.parse('$baseUrl/doctor/notifications/update');
+    final url = Uri.parse('$baseUrl/doctor/notifications/update.php');
     final headers = await _authHeaders();
     return await _client.put(
       url,
@@ -89,7 +89,7 @@ class ApiService {
     // Health Records APIs
   Future<List<dynamic>> getPatientFiles({required String patientId}) async {
     final response = await _client.get(
-      Uri.parse('$baseUrl/patient/files?patient_id=$patientId'),
+      Uri.parse('$baseUrl/patient/files.php?patient_id=$patientId'),
       headers: await _authHeaders(),
     );
     if (response.statusCode == 200) {
@@ -104,7 +104,7 @@ class ApiService {
     if (kIsWeb) {
       throw Exception('File upload is not supported on web.');
     }
-    final uri = Uri.parse('$baseUrl/patient/upload');
+    final uri = Uri.parse('$baseUrl/patient/upload.php');
     final request = http.MultipartRequest('POST', uri);
     request.headers.addAll(await _authHeaders(multipart: true));
     request.fields['patient_id'] = patientId.toString();
@@ -120,7 +120,7 @@ class ApiService {
   }
 
   Future<http.Response> downloadPatientFile({required String storedFilename}) async {
-    final uri = Uri.parse('$baseUrl/patient/download?filename=$storedFilename');
+    final uri = Uri.parse('$baseUrl/patient/download.php?filename=$storedFilename');
     final response = await _client.get(uri, headers: await _authHeaders());
     if (response.statusCode == 200) {
       return response;
@@ -217,10 +217,9 @@ class ApiService {
     developer.log('Attempting patient login for email: $email');
     try {
       final response = await _client.post(
-        Uri.parse('$baseUrl/auth/signin'),
+        Uri.parse('$baseUrl/auth/signin.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'user': 'patient',
           'email': email,
           'password': password,
           'role': 'patient',
@@ -250,7 +249,7 @@ class ApiService {
   Future<void> patientRegister(Map<String, dynamic> data) async {
     developer.log('Attempting patient registration with data: $data');
     try {
-      final url = Uri.parse('$baseUrl/patient/signup');
+      final url = Uri.parse('$baseUrl/patient/signup.php');
       developer.log('Making POST request to: $url');
       
       final headers = {'Content-Type': 'application/json'};
@@ -291,10 +290,9 @@ class ApiService {
     developer.log('Attempting doctor login for email: $email');
     try {
       final response = await _client.post(
-        Uri.parse('$baseUrl/auth/signin'),
+        Uri.parse('$baseUrl/auth/signin.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'user': 'doctor',
           'email': email,
           'password': password,
           'role': 'doctor',
@@ -324,7 +322,7 @@ class ApiService {
   Future<void> doctorRegister(Map<String, dynamic> data) async {
     developer.log('Attempting doctor registration with data: $data');
     try {
-      final url = Uri.parse('$baseUrl/doctor/signup');
+      final url = Uri.parse('$baseUrl/doctor/signup.php');
       developer.log('Making POST request to: $url');
       
       final headers = {'Content-Type': 'application/json'};
@@ -364,7 +362,7 @@ class ApiService {
   Future<List<dynamic>> getPatientComplaints({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/complaints?uid=$id');
+    final response = await _request('GET', '/patient/complaints.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -374,7 +372,7 @@ class ApiService {
 
   Future<void> addPatientComplaint({required String? uid, required String text}) async {
     if (uid == null) throw Exception('No patient UID');
-    final response = await _request('POST', '/patient/complaints', body: {
+    final response = await _request('POST', '/patient/complaints.php', body: {
       'uid': uid,
       'text': text,
     });
@@ -384,7 +382,7 @@ class ApiService {
   }
 
   Future<void> deletePatientComplaint({required int id}) async {
-    final response = await _request('DELETE', '/patient/complaints', body: {'id': id});
+    final response = await _request('DELETE', '/patient/complaints.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete complaint');
     }
@@ -393,7 +391,7 @@ class ApiService {
   Future<List<dynamic>> getPatientReferrals({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/referrals?uid=$id');
+    final response = await _request('GET', '/patient/referrals.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -403,7 +401,7 @@ class ApiService {
 
   Future<void> addPatientReferral({required String? uid, required String text}) async {
     if (uid == null) throw Exception('No patient UID');
-    final response = await _request('POST', '/patient/referrals', body: {
+    final response = await _request('POST', '/patient/referrals.php', body: {
       'uid': uid,
       'text': text,
     });
@@ -414,7 +412,7 @@ class ApiService {
 
   // Doctor Data
   Future<List<dynamic>> getPatients() async {
-    final response = await _request('GET', '/doctor/patient');
+    final response = await _request('GET', '/doctor/patient.php');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -444,7 +442,7 @@ class ApiService {
   Future<Map<String, dynamic>> saveDiseaseScore(Map<String, dynamic> scoreData) async {
     final response = await _request(
       'POST',
-      '/patient/disease_score',
+      '/patient/disease_score.php',
       body: scoreData,
     );
 
@@ -465,7 +463,7 @@ class ApiService {
       }
 
       final response = await _client.get(
-        Uri.parse('$baseUrl/patient/profile'),
+        Uri.parse('$baseUrl/patient/profile.php'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -499,7 +497,7 @@ class ApiService {
       }
 
       final response = await _client.get(
-        Uri.parse('$baseUrl/doctor/profile'),
+        Uri.parse('$baseUrl/doctor/profile.php'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -526,7 +524,7 @@ class ApiService {
   Future<List<dynamic>> getPatientComorbidities({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/comorbidities?uid=$id');
+    final response = await _request('GET', '/patient/comorbidities.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -536,7 +534,7 @@ class ApiService {
 
   Future<void> addPatientComorbidity({required String? uid, required String text}) async {
     if (uid == null) throw Exception('No patient UID');
-    final response = await _request('POST', '/patient/comorbidities', body: {
+    final response = await _request('POST', '/patient/comorbidities.php', body: {
       'uid': uid,
       'text': text,
     });
@@ -546,7 +544,7 @@ class ApiService {
   }
 
   Future<void> deletePatientComorbidity({required int id}) async {
-    final response = await _request('DELETE', '/patient/comorbidities', body: {'id': id});
+    final response = await _request('DELETE', '/patient/comorbidities.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete comorbidity');
     }
@@ -555,7 +553,7 @@ class ApiService {
   Future<List<dynamic>> getPatientDiseaseScores({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/disease_score?uid=$id');
+    final response = await _request('GET', '/patient/disease_score.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -565,7 +563,7 @@ class ApiService {
 
   Future<void> addPatientDiseaseScore({required String? uid, required double sdai, required double das28crp}) async {
     if (uid == null) throw Exception('No patient UID');
-    final response = await _request('POST', '/patient/disease_score', body: {
+    final response = await _request('POST', '/patient/disease_score.php', body: {
       'uid': uid,
       'sdai': sdai,
       'das_28_crp': das28crp,
@@ -576,7 +574,7 @@ class ApiService {
   }
 
   Future<void> deletePatientDiseaseScore({required int id}) async {
-    final response = await _request('DELETE', '/patient/disease_score', body: {'id': id});
+    final response = await _request('DELETE', '/patient/disease_score.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete disease score');
     }
@@ -585,7 +583,7 @@ class ApiService {
   Future<List<dynamic>> getPatientMedications({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/medications?uid=$id');
+    final response = await _request('GET', '/patient/medications.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -595,7 +593,7 @@ class ApiService {
 
   Future<void> addPatientMedication({required String? uid, required String medications}) async {
     if (uid == null) throw Exception('No patient UID');
-    final response = await _request('POST', '/patient/medications', body: {
+    final response = await _request('POST', '/patient/medications.php', body: {
       'uid': uid,
       'medications': medications,
     });
@@ -605,7 +603,7 @@ class ApiService {
   }
 
   Future<void> deletePatientMedication({required int id}) async {
-    final response = await _request('DELETE', '/patient/medications', body: {'id': id});
+    final response = await _request('DELETE', '/patient/medications.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete medication');
     }
@@ -614,7 +612,7 @@ class ApiService {
   Future<List<dynamic>> getPatientInvestigations({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/investigation?uid=$id');
+    final response = await _request('GET', '/patient/investigation.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -625,14 +623,14 @@ class ApiService {
   Future<void> addPatientInvestigation({required String? uid, required Map<String, dynamic> data}) async {
     if (uid == null) throw Exception('No patient UID');
     final body = {'uid': uid, ...data};
-    final response = await _request('POST', '/patient/investigation', body: body);
+    final response = await _request('POST', '/patient/investigation.php', body: body);
     if (response.statusCode != 201) {
       throw Exception('Failed to add investigation');
     }
   }
 
   Future<void> deletePatientInvestigation({required int id}) async {
-    final response = await _request('DELETE', '/patient/investigation', body: {'id': id});
+    final response = await _request('DELETE', '/patient/investigation.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete investigation');
     }
@@ -641,7 +639,7 @@ class ApiService {
   Future<List<dynamic>> getPatientTreatments({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/treatments?uid=$id');
+    final response = await _request('GET', '/patient/treatments.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -652,28 +650,28 @@ class ApiService {
   Future<void> addPatientTreatment({required String? uid, required Map<String, dynamic> data}) async {
     if (uid == null) throw Exception('No patient UID');
     final body = {'uid': uid, ...data};
-    final response = await _request('POST', '/patient/treatments', body: body);
+    final response = await _request('POST', '/patient/treatments.php', body: body);
     if (response.statusCode != 201) {
       throw Exception('Failed to add treatment');
     }
   }
 
   Future<void> deletePatientTreatment({required int id}) async {
-    final response = await _request('DELETE', '/patient/treatments', body: {'id': id});
+    final response = await _request('DELETE', '/patient/treatments.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete treatment');
     }
   }
 
   Future<void> deletePatientReferral({required int id}) async {
-    final response = await _request('DELETE', '/patient/referrals', body: {'id': id});
+    final response = await _request('DELETE', '/patient/referrals.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete referral');
     }
   }
 
   Future<List<dynamic>> getDoctorPatients() async {
-    final response = await _request('GET', '/doctor/patient');
+    final response = await _request('GET', '/doctor/patient.php');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -682,7 +680,7 @@ class ApiService {
   }
 
   Future<void> linkDoctorPatient({required String patientEmail, required String did}) async {
-    final response = await _request('POST', '/doctor/patient', body: {
+    final response = await _request('POST', '/doctor/patient.php', body: {
       'patient_email': patientEmail,
       'did': did,
     });
@@ -711,7 +709,7 @@ class ApiService {
   Future<void> sendOtp(String email) async {
     final response = await _request(
       'POST',
-      '/auth/forgot-password',
+      '/auth/forgot-password.php',
       body: {'email': email},
     );
     if (response.statusCode != 200) {
@@ -723,7 +721,7 @@ class ApiService {
   Future<void> verifyOtp(String email, String otp) async {
     final response = await _request(
       'POST',
-      '/auth/verify-otp',
+      '/auth/verify-otp.php',
       body: {'email': email, 'otp': otp},
     );
     if (response.statusCode != 200) {
@@ -735,7 +733,7 @@ class ApiService {
   Future<void> resetPassword(String email, String otp, String password) async {
     final response = await _request(
       'POST',
-      '/auth/reset-password',
+      '/auth/reset-password.php',
       body: {'email': email, 'otp': otp, 'password': password},
     );
     if (response.statusCode != 200) {

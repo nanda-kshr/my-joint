@@ -303,7 +303,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
       // unexpected type
       meds = [];
     }
-    print('Parsed meds: ' + meds.toString());
+    print('Parsed meds: $meds');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -412,7 +412,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               children: [
                 const Icon(Icons.science, color: Colors.deepPurple),
                 const SizedBox(width: 8),
-                Text('Investigation', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
+                const Text('Investigation', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
                 const Spacer(),
                 if (item['createdAt'] != null)
                   Text(
@@ -633,14 +633,14 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
+                  const CircularProgressIndicator(
                     strokeWidth: 3,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     _selectedLanguage == 'en' ? 'Loading data...' : 'தகவல் ஏற்றுகிறது...',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 14,
                     ),
@@ -1240,7 +1240,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: routeValue,
+                    initialValue: routeValue,
                     items: routeOptions
                         .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                         .toList(),

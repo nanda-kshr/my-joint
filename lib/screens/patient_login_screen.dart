@@ -95,10 +95,7 @@ class _PatientLoginScreenState extends State<PatientLoginScreen> with TickerProv
       final apiService = ApiService(prefs);
       
       if (widget.isRegister) {
-        if (_selectedGender == null) {
-          developer.log('Missing required fields: gender');
-          throw Exception('Please fill in all required fields');
-        }
+        
         
         final registrationData = {
           'name': _nameController.text.trim(),

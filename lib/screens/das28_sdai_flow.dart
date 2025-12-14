@@ -255,7 +255,7 @@ class _Das28SdaiFlowScreenState extends State<Das28SdaiFlowScreen> {
             LayoutBuilder(
               builder: (context, constraints) {
                 // Set a max height for the image box (e.g., 400px), keep aspect ratio
-                final double maxImgHeight = 400;
+                const double maxImgHeight = 400;
                 final double width = constraints.maxWidth;
                 final double height = (width / 0.5).clamp(0, maxImgHeight);
                 return Center(
@@ -312,7 +312,7 @@ class _Das28SdaiFlowScreenState extends State<Das28SdaiFlowScreen> {
             const SizedBox(height: 12),
             LayoutBuilder(
               builder: (context, constraints) {
-                final double maxImgHeight = 400;
+                const double maxImgHeight = 400;
                 final double width = constraints.maxWidth;
                 final double height = (width / 0.5).clamp(0, maxImgHeight);
                 return Center(
@@ -408,7 +408,7 @@ class _Das28SdaiFlowScreenState extends State<Das28SdaiFlowScreen> {
             Text('CRP (mg/dL)', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey.shade800)),
             const SizedBox(height: 6),
             TextField(
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: 'CRP',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

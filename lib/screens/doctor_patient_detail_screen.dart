@@ -17,12 +17,12 @@ class DoctorPatientDetailScreen extends StatefulWidget {
 class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
   ApiService? _apiService;
   late String _uid;
-  String _selectedLanguage = 'en';
+  final String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
-    _uid = widget.patient['_id'];
+    _uid = widget.patient['id'].toString();
     _initializeApiService();
   }
 
@@ -304,21 +304,21 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                   onCreate: () => _showCreateDialog('medication'),
                   itemBuilder: (item) {
                     List meds = [];
-                    print('Medications card raw item: ' + item.toString());
+                    print('Medications card raw item: $item');
                     if (item['medications'] is List) {
-                      print('Medications field (List): ' + item['medications'].toString());
+                      print('Medications field (List): ${item['medications']}');
                       meds = item['medications'];
                     } else if (item['medications'] is String) {
-                      print('Medications field (String): ' + item['medications'].toString());
+                      print('Medications field (String): ${item['medications']}');
                       try {
                         meds = jsonDecode(item['medications']);
-                        print('Parsed medications: ' + meds.toString());
+                        print('Parsed medications: $meds');
                       } catch (e) {
-                        print('Error parsing medications JSON: ' + e.toString());
+                        print('Error parsing medications JSON: $e');
                         meds = [];
                       }
                     } else {
-                      print('Medications field is neither List nor String: ' + item['medications'].toString());
+                      print('Medications field is neither List nor String: ${item['medications']}');
                     }
                     return ListTile(
                       title: Text(meds.isNotEmpty
@@ -409,7 +409,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
   }) {
     if (title.toLowerCase() == 'medications') {
       fetcher().then((data) {
-        print('Fetched medications data for patient $_uid: ' + data.toString());
+        print('Fetched medications data for patient $_uid: $data');
       });
     }
     return Container(
@@ -831,7 +831,7 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                           decoration: const InputDecoration(labelText: 'Dose'),
                         ),
                         DropdownButtonFormField<String>(
-                          value: routeValue,
+                          initialValue: routeValue,
                           items: routeOptions
                               .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                               .toList(),

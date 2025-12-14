@@ -74,7 +74,7 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
                 if (emailController.text.isNotEmpty) {
                   try {
                     final prefs = await SharedPreferences.getInstance();
-                    final did = prefs.getString('_id');
+                    final did = prefs.getString(ApiService.userIdKey);
                     print('did: $prefs');
                     if (did != null) {
                       await _apiService.linkDoctorPatient(
@@ -169,8 +169,8 @@ class _DoctorPatientsScreenState extends State<DoctorPatientsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showLinkPatientDialog,
         backgroundColor: Colors.blueAccent,
-        child: const Icon(Icons.add),
         tooltip: 'Link New Patient',
+        child: const Icon(Icons.add),
       ),
     );
   }
