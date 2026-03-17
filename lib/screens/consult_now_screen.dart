@@ -91,7 +91,7 @@ class _ConsultNowScreenState extends State<ConsultNowScreen> {
                         itemCount: _doctors.length,
                         itemBuilder: (context, index) {
                           final doctor = _doctors[index];
-                          final doctorId = doctor['did'] ?? doctor['id'];
+                          final doctorId = ((doctor['did'] ?? doctor['id']) ?? '').toString();
                           return Card(
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             child: ListTile(
