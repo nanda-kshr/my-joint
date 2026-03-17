@@ -106,9 +106,35 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
                       itemCount: _investigations.length,
                       itemBuilder: (context, index) {
                         final c = _investigations[index];
-                        final fields = c.entries
-                          .where((e) => e.key != 'id' && e.key != 'uid' && e.key != 'createdAt' && e.value != null && e.value.toString().trim().isNotEmpty)
-                          .toList();
+                        final expectedFields = <String, String>{
+                          'Hb': 'Hb',
+                          'Total_leukocyte_count': 'Total leukocyte count',
+                          'Differential_count': 'Differential count',
+                          'Platelet_count': 'Platelet count',
+                          'ESR': 'ESR',
+                          'CRP': 'CRP',
+                          'Lft_total_bilirubin': 'LFT total bilirubin',
+                          'Lft_direct_bilirubin': 'LFT direct bilirubin',
+                          'AST': 'AST',
+                          'ALT': 'ALT',
+                          'Albumin': 'Albumin',
+                          'Total_protein': 'Total protein',
+                          'GGT': 'GGT',
+                          'Urea': 'Urea',
+                          'creatinine': 'Creatinine',
+                          'uric_acid': 'Uric acid',
+                          'Urine_routine': 'Urine routine',
+                          'Urine_PCR': 'Urine PCR',
+                          'RA_factor': 'RA factor',
+                          'ANTI_CCP': 'ANTI CCP',
+                        };
+
+                        final hasAny = expectedFields.keys.any((k) {
+                          final v1 = c[k];
+                          final v2 = c[k.toLowerCase()];
+                          return (v1 != null && v1.toString().trim().isNotEmpty) || (v2 != null && v2.toString().trim().isNotEmpty);
+                        });
+                        final created = c['createdAt'] ?? c['created_at'];
                         return Card(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 2,
@@ -123,27 +149,33 @@ class _PatientInvestigationsScreenState extends State<PatientInvestigationsScree
                                     const SizedBox(width: 8),
                                     Text(_selectedLanguage == 'en' ? 'Investigation' : 'ஆய்வு', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.deepPurple)),
                                     const Spacer(),
-                                    if (c['createdAt'] != null)
+                                    if (created != null)
                                       Text(
-                                        c['createdAt'].toString().split('T').first,
+                                        created.toString().split('T').first,
                                         style: const TextStyle(color: Colors.grey, fontSize: 12),
                                       ),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
-                                if (fields.isNotEmpty)
-                                  ...fields.map<Widget>((e) => Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 2),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.circle, size: 8, color: Colors.deepPurple),
-                                            const SizedBox(width: 6),
-                                            Expanded(child: Text('${e.key}: ${e.value}', style: const TextStyle(fontSize: 15))),
-                                          ],
-                                        ),
-                                      )),
-                                if (fields.isEmpty)
-                                  const Text('No data', style: TextStyle(color: Colors.grey)),
+                                if (!hasAny)
+                                  const Text('No data', style: TextStyle(color: Colors.grey))
+                                else
+                                  ...expectedFields.entries.map<Widget>((entry) {
+                                    final key = entry.key;
+                                    final label = entry.value;
+                                    final raw = c[key] ?? c[key.toLowerCase()];
+                                    final value = (raw != null && raw.toString().trim().isNotEmpty) ? raw.toString() : 'No data';
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.circle, size: 8, color: Colors.deepPurple),
+                                          const SizedBox(width: 6),
+                                          Expanded(child: Text('$label: $value', style: const TextStyle(fontSize: 15))),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
                               ],
                             ),
                           ),

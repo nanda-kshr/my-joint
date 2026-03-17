@@ -9,8 +9,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   String _selectedLanguage = 'en'; // 'en' or 'ta'
   @override
   void initState() {
@@ -42,27 +40,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          _buildSectionHeader('Preferences'),
-          _buildSwitchTile(
-            'Enable Notifications',
-            'Receive updates about your health and appointments',
-            _notificationsEnabled,
-            (value) {
-              setState(() {
-                _notificationsEnabled = value;
-              });
-            },
-          ),
-          _buildSwitchTile(
-            'Dark Mode',
-            'Switch between light and dark theme',
-            _darkModeEnabled,
-            (value) {
-              setState(() {
-                _darkModeEnabled = value;
-              });
-            },
-          ),
           _buildDropdownTile(
             _selectedLanguage == 'en' ? 'Language' : 'மொழி',
             _selectedLanguage == 'en' ? 'Select your preferred language' : 'உங்கள் விருப்பமான மொழியை தேர்ந்தெடுக்கவும்',
@@ -77,47 +54,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             labels: {
               'en': 'English',
               'ta': 'தமிழ்',
-            },
-          ),
-          const SizedBox(height: 24),
-          _buildSectionHeader('Account'),
-          _buildActionTile(
-            'Change Password',
-            'Update your account password',
-            Icons.lock,
-            () {
-              // TODO: Implement change password
-            },
-          ),
-          _buildActionTile(
-            'Privacy Settings',
-            'Manage your privacy preferences',
-            Icons.privacy_tip,
-            () {
-              // TODO: Implement privacy settings
-            },
-          ),
-          const SizedBox(height: 24),
-          _buildSectionHeader('About'),
-          _buildInfoTile(
-            'App Version',
-            '1.0.0',
-            Icons.info,
-          ),
-          _buildActionTile(
-            'Terms of Service',
-            'Read our terms and conditions',
-            Icons.description,
-            () {
-              // TODO: Show terms of service
-            },
-          ),
-          _buildActionTile(
-            'Privacy Policy',
-            'Read our privacy policy',
-            Icons.policy,
-            () {
-              // TODO: Show privacy policy
             },
           ),
         ],

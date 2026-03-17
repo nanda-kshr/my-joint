@@ -345,24 +345,66 @@ class _DoctorPatientDetailScreenState extends State<DoctorPatientDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ...item.entries
-                            .where((e) => e.key != 'id' && e.key != 'uid' && e.key != 'createdAt' && e.value != null && e.value.toString().trim().isNotEmpty)
-                            .map((e) =>
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 1.5),
-                                child: Row(
-                                  children: [
-                                    Text('${e.key}: ', style: const TextStyle(fontWeight: FontWeight.w600)),
-                                    Expanded(child: Text('${e.value}', style: const TextStyle(color: Colors.black87))),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          if (item['createdAt'] != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text('Date: ${item['createdAt']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                            ),
+                          Builder(builder: (_) {
+                            final expectedFields = <String, String>{
+                              'Hb': 'Hb',
+                              'Total_leukocyte_count': 'Total leukocyte count',
+                              'Differential_count': 'Differential count',
+                              'Platelet_count': 'Platelet count',
+                              'ESR': 'ESR',
+                              'CRP': 'CRP',
+                              'Lft_total_bilirubin': 'LFT total bilirubin',
+                              'Lft_direct_bilirubin': 'LFT direct bilirubin',
+                              'AST': 'AST',
+                              'ALT': 'ALT',
+                              'Albumin': 'Albumin',
+                              'Total_protein': 'Total protein',
+                              'GGT': 'GGT',
+                              'Urea': 'Urea',
+                              'creatinine': 'Creatinine',
+                              'uric_acid': 'Uric acid',
+                              'Urine_routine': 'Urine routine',
+                              'Urine_PCR': 'Urine PCR',
+                              'RA_factor': 'RA factor',
+                              'ANTI_CCP': 'ANTI CCP',
+                            };
+
+                            final hasAny = expectedFields.keys.any((k) {
+                              final v1 = item[k];
+                              final v2 = item[k.toLowerCase()];
+                              return (v1 != null && v1.toString().trim().isNotEmpty) || (v2 != null && v2.toString().trim().isNotEmpty);
+                            });
+
+                            final created = item['createdAt'] ?? item['created_at'];
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (!hasAny)
+                                  const Text('No data', style: TextStyle(color: Colors.grey))
+                                else
+                                  ...expectedFields.entries.map((entry) {
+                                    final key = entry.key;
+                                    final label = entry.value;
+                                    final raw = item[key] ?? item[key.toLowerCase()];
+                                    final value = (raw != null && raw.toString().trim().isNotEmpty) ? raw.toString() : 'No data';
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 1.5),
+                                      child: Row(
+                                        children: [
+                                          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w600)),
+                                          Expanded(child: Text(value, style: const TextStyle(color: Colors.black87))),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                if (created != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text('Date: $created', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                  ),
+                              ],
+                            );
+                          }),
                         ],
                       ),
                     ),

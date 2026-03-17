@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'dart:math' as math;
 import 'das28_sdai_flow.dart';
 
 class PatientDiseaseScoresScreen extends StatefulWidget {
@@ -132,6 +133,20 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
     super.dispose();
   }
 
+  DateTime _parseDate(Map<String, dynamic> item) {
+    final s = item['createdAt'] ?? item['created_at'];
+    if (s == null) return DateTime.fromMillisecondsSinceEpoch(0);
+    try {
+      return DateTime.parse(s.toString());
+    } catch (_) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
+  }
+
+  bool _hasDate(Map<String, dynamic> item) {
+    return (item['createdAt'] ?? item['created_at']) != null;
+  }
+
   Color _getSdaiColor(double score) {
     if (score <= 3.3) return Colors.green; // Remission
     if (score <= 11.0) return Colors.blue; // Low Activity
@@ -158,15 +173,11 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
     }
 
     final sortedScores = List<Map<String, dynamic>>.from(_diseaseScores);
-  sortedScores.sort((a, b) {
-  final dateA = a['created_at'] != null ? DateTime.parse(a['created_at'].toString()) : DateTime(1970);
-  final dateB = b['created_at'] != null ? DateTime.parse(b['created_at'].toString()) : DateTime(1970);
-  return dateA.compareTo(dateB);
-  });
+    sortedScores.sort((a, b) => _parseDate(a).compareTo(_parseDate(b)));
 
-  final last12Scores = sortedScores.length > 12
-    ? sortedScores.sublist(sortedScores.length - 12)
-    : sortedScores;
+    final last12Scores = sortedScores.length > 12
+        ? sortedScores.sublist(sortedScores.length - 12)
+        : sortedScores;
 
     final primaryColor = Theme.of(context).primaryColor;
     final textColor =
@@ -200,9 +211,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index >= 0 && index < last12Scores.length) {
-                  final dateStr = last12Scores[index]['created_at']?.toString();
-                  final date = dateStr != null ? DateTime.parse(dateStr) : DateTime(1970);
-                  // MongoDB ISODate format
+                  final date = _parseDate(last12Scores[index]);
                   final mongoDate = date.toUtc().toIso8601String();
                   return SideTitleWidget(
                     meta: meta,
@@ -288,11 +297,10 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
         ),
         lineTouchData: LineTouchData(
           touchTooltipData: LineTouchTooltipData(
-            getTooltipItems: (touchedSpots) {
+                getTooltipItems: (touchedSpots) {
               return touchedSpots.map((spot) {
                 final scoreData = last12Scores[spot.spotIndex];
-                final dateStr = scoreData['created_at']?.toString();
-                final date = dateStr != null ? DateTime.parse(dateStr) : DateTime(1970);
+                final date = _parseDate(scoreData);
                 final mongoDate = date.toUtc().toIso8601String();
                 return LineTooltipItem(
                   '${spot.y.toStringAsFixed(1)}\n$mongoDate',
@@ -361,19 +369,27 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                         Text('SDAI Score Over Time',
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 20),
-                        SizedBox(
-                          height: 300,
-                          child: _buildChart(
-                            spots: _getSpots('SDAI', 'sdai'),
-                            maxY: 100,
-                            title: 'SDAI',
-                            thresholds: {
-                              'High': 26.0,
-                              'Moderate': 11.0,
-                              'Low': 3.3,
-                            },
-                            colorFunction: _getSdaiColor,
-                          ),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Builder(builder: (context) {
+                            final spots = _getSpots('SDAI', 'sdai');
+                            final width = math.max(300, spots.length * 60.0);
+                            return SizedBox(
+                              width: double.parse(width.toString()),
+                              height: 300,
+                              child: _buildChart(
+                                spots: spots,
+                                maxY: 100,
+                                title: 'SDAI',
+                                thresholds: {
+                                  'High': 26.0,
+                                  'Moderate': 11.0,
+                                  'Low': 3.3,
+                                },
+                                colorFunction: _getSdaiColor,
+                              ),
+                            );
+                          }),
                         ),
                         const SizedBox(height: 10),
                         _buildLegend(
@@ -388,19 +404,27 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                         Text('DAS28-CRP Score Over Time',
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 20),
-                        SizedBox(
-                          height: 300,
-                          child: _buildChart(
-                            spots: _getSpots('DAS_28_CRP', 'das_28_crp'),
-                            maxY: 10,
-                            title: 'DAS28-CRP',
-                            thresholds: {
-                              'High': 5.1,
-                              'Moderate': 3.2,
-                              'Low': 2.6,
-                            },
-                            colorFunction: _getDas28CrpColor,
-                          ),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Builder(builder: (context) {
+                            final spots = _getSpots('DAS_28_CRP', 'das_28_crp');
+                            final width = math.max(300, spots.length * 60.0);
+                            return SizedBox(
+                              width: double.parse(width.toString()),
+                              height: 300,
+                              child: _buildChart(
+                                spots: spots,
+                                maxY: 10,
+                                title: 'DAS28-CRP',
+                                thresholds: {
+                                  'High': 5.1,
+                                  'Moderate': 3.2,
+                                  'Low': 2.6,
+                                },
+                                colorFunction: _getDas28CrpColor,
+                              ),
+                            );
+                          }),
                         ),
                         const SizedBox(height: 10),
                         _buildLegend(
@@ -454,7 +478,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                                     Text('SDAI: ${score['SDAI'] ?? score['sdai'] ?? 'N/A'}'),
                                     Text('DAS28-CRP: ${score['DAS_28_CRP'] ?? score['das_28_crp'] ?? 'N/A'}'),
                                     Text(
-                                      'Date: ${score['created_at'] != null ? DateTime.parse(score['created_at'].toString()).toUtc().toIso8601String() : 'Unknown'}',
+                                      'Date: ${_hasDate(score) ? DateFormat.yMMMd().format(_parseDate(score).toLocal()) : 'Unknown'}',
                                     ),
                                   ],
                                 ),
@@ -521,11 +545,7 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
 
   List<FlSpot> _getSpots(String key1, String key2) {
     final sortedScores = List<Map<String, dynamic>>.from(_diseaseScores);
-    sortedScores.sort((a, b) {
-      final dateA = a['created_at'] != null ? DateTime.parse(a['created_at'].toString()) : DateTime(1970);
-      final dateB = b['created_at'] != null ? DateTime.parse(b['created_at'].toString()) : DateTime(1970);
-      return dateA.compareTo(dateB);
-    });
+    sortedScores.sort((a, b) => _parseDate(a).compareTo(_parseDate(b)));
 
     final last12Scores = sortedScores.length > 12
         ? sortedScores.sublist(sortedScores.length - 12)

@@ -106,6 +106,14 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
                       itemCount: _treatments.length,
                       itemBuilder: (context, index) {
                         final c = _treatments[index];
+                        final created = c['createdAt'] ?? c['created_at'];
+                        final treatment = c['treatment'] ?? c['Treatment'] ?? c['text'] ?? 'No treatment';
+                        final name = c['name'] ?? c['Name'];
+                        final dose = c['dose'] ?? c['Dose'];
+                        final route = c['route'] ?? c['Route'];
+                        final frequencyText = c['frequency_text'] ?? c['frequencyText'] ?? c['Frequency_text'];
+                        final timePeriod = c['Time_Period'] ?? c['time_period'] ?? c['timePeriod'];
+
                         return Card(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 2,
@@ -120,19 +128,19 @@ class _PatientTreatmentsScreenState extends State<PatientTreatmentsScreen> {
                                     const SizedBox(width: 8),
                                     Text(_selectedLanguage == 'en' ? 'Treatment' : 'சிகிச்சை', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.teal)),
                                     const Spacer(),
-                                    if (c['createdAt'] != null)
+                                    if (created != null)
                                       Text(
-                                        c['createdAt'].toString().split('T').first,
+                                        created.toString().split('T').first,
                                         style: const TextStyle(color: Colors.grey, fontSize: 12),
                                       ),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
-                                Text('${c['treatment'] ?? ''}${c['name'] != null ? ' - ' + c['name'] : ''}', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-                                if (c['dose'] != null) Text(_selectedLanguage == 'en' ? 'Dose: ${c['dose']}' : 'மாத்திரை: ${c['dose']}'),
-                                if (c['route'] != null) Text(_selectedLanguage == 'en' ? 'Route: ${c['route']}' : 'முறை: ${c['route']}'),
-                                if (c['frequency_text'] != null) Text(_selectedLanguage == 'en' ? 'Frequency: ${c['frequency_text']}' : 'அதிகமா: ${c['frequency_text']}'),
-                                if (c['Time_Period'] != null) Text(_selectedLanguage == 'en' ? 'Duration: ${c['Time_Period']}' : 'காலம்: ${c['Time_Period']}'),
+                                Text('$treatment${name != null ? ' - ' + name : ''}', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
+                                Text(_selectedLanguage == 'en' ? 'Dose: ${dose ?? 'No data'}' : 'மாத்திரை: ${dose ?? 'No data'}'),
+                                Text(_selectedLanguage == 'en' ? 'Route: ${route ?? 'No data'}' : 'முறை: ${route ?? 'No data'}'),
+                                Text(_selectedLanguage == 'en' ? 'Frequency: ${frequencyText ?? 'No data'}' : 'அதிகமா: ${frequencyText ?? 'No data'}'),
+                                Text(_selectedLanguage == 'en' ? 'Duration: ${timePeriod ?? 'No data'}' : 'காலம்: ${timePeriod ?? 'No data'}'),
                               ],
                             ),
                           ),

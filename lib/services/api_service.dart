@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -7,7 +6,8 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'dart:developer' as developer;
 
 Future<List<dynamic>> getAllDoctors(ApiService api) async {
-  final response = await api._client.get(Uri.parse('${ApiService.baseUrl}/doctor/patient.php'));
+  final response = await api._client
+      .get(Uri.parse('${ApiService.baseUrl}/doctor/patient.php'));
   if (response.statusCode == 200) {
     return jsonDecode(response.body);
   } else {
@@ -16,7 +16,10 @@ Future<List<dynamic>> getAllDoctors(ApiService api) async {
 }
 
 // Request consultation
-Future<void> requestConsultation(ApiService api, {required String patientId, required String doctorId, required String message}) async {
+Future<void> requestConsultation(ApiService api,
+    {required String patientId,
+    required String doctorId,
+    required String message}) async {
   final headers = await api._authHeaders();
   final response = await api._client.post(
     Uri.parse('${ApiService.baseUrl}/doctor/consult-request.php'),
@@ -34,8 +37,10 @@ Future<void> requestConsultation(ApiService api, {required String patientId, req
 
 class ApiService {
   // Pain Assessment APIs
-  Future<void> savePainAssessment({required String patientId, required int painScore}) async {
-    final response = await _request('POST', '/patient/pain-assessment.php', body: {
+  Future<void> savePainAssessment(
+      {required String patientId, required int painScore}) async {
+    final response =
+        await _request('POST', '/patient/pain-assessment.php', body: {
       'patient_id': patientId,
       'pain_score': painScore,
     });
@@ -45,7 +50,8 @@ class ApiService {
   }
 
   Future<List<dynamic>> getPainAssessments({required String patientId}) async {
-    final response = await _request('GET', '/patient/pain-assessment.php?patient_id=$patientId');
+    final response = await _request(
+        'GET', '/patient/pain-assessment.php?patient_id=$patientId');
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data['scores'] ?? [];
@@ -53,7 +59,9 @@ class ApiService {
       throw Exception('Failed to fetch pain assessments');
     }
   }
-  // static const String baseUrl = 'http://localhost:3000/api';
+
+  // static const String baseUrl = 'http://localhost:8000/api';
+  // static const String baseUrl = 'http://10.209.214.75:8000/api';
   static const String baseUrl = 'http://180.235.121.253:8087/my_joints/api';
   static const String tokenKey = 'auth_token';
   static const String userTypeKey = 'user_type';
@@ -73,20 +81,18 @@ class ApiService {
   }
 
   // Update notification status (accept/reject)
-  Future<http.Response> updateNotificationStatus(String notificationId, String status) async {
+  Future<http.Response> updateNotificationStatus(
+      String notificationId, String status) async {
     final url = Uri.parse('$baseUrl/doctor/notifications/update.php');
     final headers = await _authHeaders();
     return await _client.put(
       url,
       headers: headers,
-      body: jsonEncode({
-        'id': notificationId,
-        'status': status
-      }),
+      body: jsonEncode({'id': notificationId, 'status': status}),
     );
   }
 
-    // Health Records APIs
+  // Health Records APIs
   Future<List<dynamic>> getPatientFiles({required String patientId}) async {
     final response = await _client.get(
       Uri.parse('$baseUrl/patient/files.php?patient_id=$patientId'),
@@ -100,7 +106,10 @@ class ApiService {
     }
   }
 
-  Future<String> uploadPatientFile({required String patientId, required String filePath, required String fileName}) async {
+  Future<String> uploadPatientFile(
+      {required String patientId,
+      required String filePath,
+      required String fileName}) async {
     if (kIsWeb) {
       throw Exception('File upload is not supported on web.');
     }
@@ -108,7 +117,8 @@ class ApiService {
     final request = http.MultipartRequest('POST', uri);
     request.headers.addAll(await _authHeaders(multipart: true));
     request.fields['patient_id'] = patientId.toString();
-    request.files.add(await http.MultipartFile.fromPath('file', filePath, filename: fileName));
+    request.files.add(await http.MultipartFile.fromPath('file', filePath,
+        filename: fileName));
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
@@ -119,8 +129,10 @@ class ApiService {
     }
   }
 
-  Future<http.Response> downloadPatientFile({required String storedFilename}) async {
-    final uri = Uri.parse('$baseUrl/patient/download.php?filename=$storedFilename');
+  Future<http.Response> downloadPatientFile(
+      {required String storedFilename}) async {
+    final uri =
+        Uri.parse('$baseUrl/patient/download.php?filename=$storedFilename');
     final response = await _client.get(uri, headers: await _authHeaders());
     if (response.statusCode == 200) {
       return response;
@@ -251,7 +263,7 @@ class ApiService {
     try {
       final url = Uri.parse('$baseUrl/patient/signup.php');
       developer.log('Making POST request to: $url');
-      
+
       final headers = {'Content-Type': 'application/json'};
       final body = jsonEncode(data);
       developer.log('Request headers: $headers');
@@ -273,7 +285,8 @@ class ApiService {
         developer.log('Patient registration successful');
       } else {
         final errorData = jsonDecode(response.body);
-        developer.log('Registration failed with status ${response.statusCode}: ${errorData['error']}');
+        developer.log(
+            'Registration failed with status ${response.statusCode}: ${errorData['error']}');
         throw Exception(errorData['error'] ?? 'Registration failed');
       }
     } catch (e, stackTrace) {
@@ -324,7 +337,7 @@ class ApiService {
     try {
       final url = Uri.parse('$baseUrl/doctor/signup.php');
       developer.log('Making POST request to: $url');
-      
+
       final headers = {'Content-Type': 'application/json'};
       final body = jsonEncode(data);
       developer.log('Request headers: $headers');
@@ -346,7 +359,8 @@ class ApiService {
         developer.log('Doctor registration successful');
       } else {
         final errorData = jsonDecode(response.body);
-        developer.log('Registration failed with status ${response.statusCode}: ${errorData['error']}');
+        developer.log(
+            'Registration failed with status ${response.statusCode}: ${errorData['error']}');
         throw Exception(errorData['error'] ?? 'Registration failed');
       }
     } catch (e, stackTrace) {
@@ -370,7 +384,8 @@ class ApiService {
     }
   }
 
-  Future<void> addPatientComplaint({required String? uid, required String text}) async {
+  Future<void> addPatientComplaint(
+      {required String? uid, required String text}) async {
     if (uid == null) throw Exception('No patient UID');
     final response = await _request('POST', '/patient/complaints.php', body: {
       'uid': uid,
@@ -382,7 +397,8 @@ class ApiService {
   }
 
   Future<void> deletePatientComplaint({required int id}) async {
-    final response = await _request('DELETE', '/patient/complaints.php', body: {'id': id});
+    final response =
+        await _request('DELETE', '/patient/complaints.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete complaint');
     }
@@ -399,7 +415,8 @@ class ApiService {
     }
   }
 
-  Future<void> addPatientReferral({required String? uid, required String text}) async {
+  Future<void> addPatientReferral(
+      {required String? uid, required String text}) async {
     if (uid == null) throw Exception('No patient UID');
     final response = await _request('POST', '/patient/referrals.php', body: {
       'uid': uid,
@@ -439,7 +456,8 @@ class ApiService {
   }
 
   // Save Disease Score
-  Future<Map<String, dynamic>> saveDiseaseScore(Map<String, dynamic> scoreData) async {
+  Future<Map<String, dynamic>> saveDiseaseScore(
+      Map<String, dynamic> scoreData) async {
     final response = await _request(
       'POST',
       '/patient/disease_score.php',
@@ -475,14 +493,15 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        
+
         return data['patient'];
       } else {
         final errorData = jsonDecode(response.body);
         throw Exception(errorData['message'] ?? 'Failed to fetch profile');
       }
     } catch (e, stackTrace) {
-      developer.log('Error fetching profile: $e', error: e, stackTrace: stackTrace);
+      developer.log('Error fetching profile: $e',
+          error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -512,7 +531,8 @@ class ApiService {
         throw Exception(errorData['message'] ?? 'Failed to fetch profile');
       }
     } catch (e, stackTrace) {
-      developer.log('Error fetching profile: $e', error: e, stackTrace: stackTrace);
+      developer.log('Error fetching profile: $e',
+          error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -524,7 +544,8 @@ class ApiService {
   Future<List<dynamic>> getPatientComorbidities({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/comorbidities.php?uid=$id');
+    final response =
+        await _request('GET', '/patient/comorbidities.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -532,9 +553,11 @@ class ApiService {
     }
   }
 
-  Future<void> addPatientComorbidity({required String? uid, required String text}) async {
+  Future<void> addPatientComorbidity(
+      {required String? uid, required String text}) async {
     if (uid == null) throw Exception('No patient UID');
-    final response = await _request('POST', '/patient/comorbidities.php', body: {
+    final response =
+        await _request('POST', '/patient/comorbidities.php', body: {
       'uid': uid,
       'text': text,
     });
@@ -544,7 +567,8 @@ class ApiService {
   }
 
   Future<void> deletePatientComorbidity({required int id}) async {
-    final response = await _request('DELETE', '/patient/comorbidities.php', body: {'id': id});
+    final response = await _request('DELETE', '/patient/comorbidities.php',
+        body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete comorbidity');
     }
@@ -553,7 +577,8 @@ class ApiService {
   Future<List<dynamic>> getPatientDiseaseScores({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/disease_score.php?uid=$id');
+    final response =
+        await _request('GET', '/patient/disease_score.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -561,9 +586,13 @@ class ApiService {
     }
   }
 
-  Future<void> addPatientDiseaseScore({required String? uid, required double sdai, required double das28crp}) async {
+  Future<void> addPatientDiseaseScore(
+      {required String? uid,
+      required double sdai,
+      required double das28crp}) async {
     if (uid == null) throw Exception('No patient UID');
-    final response = await _request('POST', '/patient/disease_score.php', body: {
+    final response =
+        await _request('POST', '/patient/disease_score.php', body: {
       'uid': uid,
       'sdai': sdai,
       'das_28_crp': das28crp,
@@ -574,7 +603,8 @@ class ApiService {
   }
 
   Future<void> deletePatientDiseaseScore({required int id}) async {
-    final response = await _request('DELETE', '/patient/disease_score.php', body: {'id': id});
+    final response = await _request('DELETE', '/patient/disease_score.php',
+        body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete disease score');
     }
@@ -591,7 +621,8 @@ class ApiService {
     }
   }
 
-  Future<void> addPatientMedication({required String? uid, required String medications}) async {
+  Future<void> addPatientMedication(
+      {required String? uid, required String medications}) async {
     if (uid == null) throw Exception('No patient UID');
     final response = await _request('POST', '/patient/medications.php', body: {
       'uid': uid,
@@ -603,7 +634,8 @@ class ApiService {
   }
 
   Future<void> deletePatientMedication({required int id}) async {
-    final response = await _request('DELETE', '/patient/medications.php', body: {'id': id});
+    final response =
+        await _request('DELETE', '/patient/medications.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete medication');
     }
@@ -612,7 +644,8 @@ class ApiService {
   Future<List<dynamic>> getPatientInvestigations({String? uid}) async {
     final id = uid ?? await getUserId();
     if (id == null) throw Exception('No patient UID');
-    final response = await _request('GET', '/patient/investigation.php?uid=$id');
+    final response =
+        await _request('GET', '/patient/investigation.php?uid=$id');
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -620,17 +653,20 @@ class ApiService {
     }
   }
 
-  Future<void> addPatientInvestigation({required String? uid, required Map<String, dynamic> data}) async {
+  Future<void> addPatientInvestigation(
+      {required String? uid, required Map<String, dynamic> data}) async {
     if (uid == null) throw Exception('No patient UID');
     final body = {'uid': uid, ...data};
-    final response = await _request('POST', '/patient/investigation.php', body: body);
+    final response =
+        await _request('POST', '/patient/investigation.php', body: body);
     if (response.statusCode != 201) {
       throw Exception('Failed to add investigation');
     }
   }
 
   Future<void> deletePatientInvestigation({required int id}) async {
-    final response = await _request('DELETE', '/patient/investigation.php', body: {'id': id});
+    final response = await _request('DELETE', '/patient/investigation.php',
+        body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete investigation');
     }
@@ -647,24 +683,28 @@ class ApiService {
     }
   }
 
-  Future<void> addPatientTreatment({required String? uid, required Map<String, dynamic> data}) async {
+  Future<void> addPatientTreatment(
+      {required String? uid, required Map<String, dynamic> data}) async {
     if (uid == null) throw Exception('No patient UID');
     final body = {'uid': uid, ...data};
-    final response = await _request('POST', '/patient/treatments.php', body: body);
+    final response =
+        await _request('POST', '/patient/treatments.php', body: body);
     if (response.statusCode != 201) {
       throw Exception('Failed to add treatment');
     }
   }
 
   Future<void> deletePatientTreatment({required int id}) async {
-    final response = await _request('DELETE', '/patient/treatments.php', body: {'id': id});
+    final response =
+        await _request('DELETE', '/patient/treatments.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete treatment');
     }
   }
 
   Future<void> deletePatientReferral({required int id}) async {
-    final response = await _request('DELETE', '/patient/referrals.php', body: {'id': id});
+    final response =
+        await _request('DELETE', '/patient/referrals.php', body: {'id': id});
     if (response.statusCode != 200) {
       throw Exception('Failed to delete referral');
     }
@@ -679,7 +719,8 @@ class ApiService {
     }
   }
 
-  Future<void> linkDoctorPatient({required String patientEmail, required String did}) async {
+  Future<void> linkDoctorPatient(
+      {required String patientEmail, required String did}) async {
     final response = await _request('POST', '/doctor/patient.php', body: {
       'patient_email': patientEmail,
       'did': did,
@@ -690,21 +731,44 @@ class ApiService {
   }
 
   // --- CREATE WRAPPERS for DoctorPatientDetailScreen ---
-  Future<void> createPatientComplaint({required String uid, required String text}) => addPatientComplaint(uid: uid, text: text);
-  Future<void> createPatientComorbidity({required String uid, required String text}) => addPatientComorbidity(uid: uid, text: text);
-  Future<void> createPatientDiseaseScore({required String uid, required double sdai, required double das28crp}) => addPatientDiseaseScore(uid: uid, sdai: sdai, das28crp: das28crp);
-  Future<void> createPatientMedications({required String uid, required List<Map<String, String>> medications}) => addPatientMedication(uid: uid, medications: jsonEncode(medications));
-  Future<void> createPatientInvestigation(Map<String, dynamic> data) => addPatientInvestigation(uid: data['uid'], data: data);
-  Future<void> createPatientTreatment({required String uid, required String treatment, required String name, required String dose, required String route, required int frequency, required String frequencyText, required int timePeriod}) => addPatientTreatment(uid: uid, data: {
-    'treatment': treatment,
-    'name': name,
-    'dose': dose,
-    'route': route,
-    'frequency': frequency,
-    'frequency_text': frequencyText,
-    'Time_Period': timePeriod,
-  });
-  Future<void> createPatientReferral({required String uid, required String text}) => addPatientReferral(uid: uid, text: text);
+  Future<void> createPatientComplaint(
+          {required String uid, required String text}) =>
+      addPatientComplaint(uid: uid, text: text);
+  Future<void> createPatientComorbidity(
+          {required String uid, required String text}) =>
+      addPatientComorbidity(uid: uid, text: text);
+  Future<void> createPatientDiseaseScore(
+          {required String uid,
+          required double sdai,
+          required double das28crp}) =>
+      addPatientDiseaseScore(uid: uid, sdai: sdai, das28crp: das28crp);
+  Future<void> createPatientMedications(
+          {required String uid,
+          required List<Map<String, String>> medications}) =>
+      addPatientMedication(uid: uid, medications: jsonEncode(medications));
+  Future<void> createPatientInvestigation(Map<String, dynamic> data) =>
+      addPatientInvestigation(uid: data['uid'], data: data);
+  Future<void> createPatientTreatment(
+          {required String uid,
+          required String treatment,
+          required String name,
+          required String dose,
+          required String route,
+          required int frequency,
+          required String frequencyText,
+          required int timePeriod}) =>
+      addPatientTreatment(uid: uid, data: {
+        'treatment': treatment,
+        'name': name,
+        'dose': dose,
+        'route': route,
+        'frequency': frequency,
+        'frequency_text': frequencyText,
+        'Time_Period': timePeriod,
+      });
+  Future<void> createPatientReferral(
+          {required String uid, required String text}) =>
+      addPatientReferral(uid: uid, text: text);
 
   Future<void> sendOtp(String email) async {
     final response = await _request(
