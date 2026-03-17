@@ -25,6 +25,8 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
   final _sdaiController = TextEditingController();
   final _das28crpController = TextEditingController();
   String _selectedLanguage = 'en';
+  final ScrollController _sdaiScrollController = ScrollController();
+  final ScrollController _das28ScrollController = ScrollController();
 
   @override
   void initState() {
@@ -59,6 +61,14 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
       setState(() {
         _diseaseScores = List<Map<String, dynamic>>.from(diseaseScores);
         _isLoading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_sdaiScrollController.hasClients) {
+          _sdaiScrollController.jumpTo(0);
+        }
+        if (_das28ScrollController.hasClients) {
+          _das28ScrollController.jumpTo(0);
+        }
       });
     } catch (e) {
       print('Error loading disease scores: $e');
@@ -130,6 +140,8 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
   void dispose() {
     _sdaiController.dispose();
     _das28crpController.dispose();
+    _sdaiScrollController.dispose();
+    _das28ScrollController.dispose();
     super.dispose();
   }
 
@@ -370,12 +382,16 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 20),
                         SingleChildScrollView(
+                          controller: _sdaiScrollController,
                           scrollDirection: Axis.horizontal,
                           child: Builder(builder: (context) {
                             final spots = _getSpots('SDAI', 'sdai');
-                            final width = math.max(300, spots.length * 60.0);
+                            final width = math.max(
+                              MediaQuery.of(context).size.width,
+                              spots.length * 100.0,
+                            );
                             return SizedBox(
-                              width: double.parse(width.toString()),
+                              width: width,
                               height: 300,
                               child: _buildChart(
                                 spots: spots,
@@ -405,12 +421,16 @@ class _PatientDiseaseScoresScreenState extends State<PatientDiseaseScoresScreen>
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 20),
                         SingleChildScrollView(
+                          controller: _das28ScrollController,
                           scrollDirection: Axis.horizontal,
                           child: Builder(builder: (context) {
                             final spots = _getSpots('DAS_28_CRP', 'das_28_crp');
-                            final width = math.max(300, spots.length * 60.0);
+                            final width = math.max(
+                              MediaQuery.of(context).size.width,
+                              spots.length * 100.0,
+                            );
                             return SizedBox(
-                              width: double.parse(width.toString()),
+                              width: width,
                               height: 300,
                               child: _buildChart(
                                 spots: spots,
