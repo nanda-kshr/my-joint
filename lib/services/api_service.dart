@@ -54,7 +54,7 @@ class ApiService {
     }
   }
   // static const String baseUrl = 'http://localhost:3000/api';
-  static const String baseUrl = 'http://10.190.79.103/api';
+  static const String baseUrl = 'http://180.235.121.253:8087/my_joints/api';
   static const String tokenKey = 'auth_token';
   static const String userTypeKey = 'user_type';
   static const String userIdKey = '_id';
